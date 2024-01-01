@@ -11,7 +11,7 @@ A CLI to help download music independently or from your exported apple music lib
 ## 🛠️ Install it!
 
 ```console
-$ pip install amusing
+$ pip install amusing-app
 ```
 
 ## ✨ Getting set up

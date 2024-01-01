@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "amusing"
+name = "amusing-app"
 version = "0.1.0"
 description = ""
 authors = ["Yash Prakash <yashprakash13@gmail.com>"]
