@@ -16,7 +16,7 @@ $ pip install amusing
 
 ## ✨ Getting set up
 
-There are three things to get working:
+There are three things to know before moving on to the next section:
 
 - The CLI takes in a `appconfig.yaml` file similar to what's indicated in `appconfig.example.yaml`. You can simply rename it.
   The file looks like this:
@@ -34,8 +34,12 @@ There are three things to get working:
 
 There are currently 6 commands available, excluding the `amusing --version`.
 
+The first time you run a command (eg. --help), an `Amusing` directory will be created in your `pathlib.Path.home()/Downloads` folder. For eg., on MacOS, it's in `/Users/Username/Downloads`.
+
 ```console
 $ amusing --help
+
+ Created a new config file: /Users/username/Downloads/Amusing/appconfig.yaml
 
  Usage: amusing [OPTIONS] COMMAND [ARGS]...
 
