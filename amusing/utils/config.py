@@ -8,7 +8,7 @@ APP_CONFIG = {}
 
 def find_or_create_config_file():
     # Define the file path
-    os.makedirs(os.path.join(Path.home(), "Downloads", "Amusing"))
+    os.makedirs(os.path.join(Path.home(), "Downloads", "Amusing"), exist_ok=True)
     file_path = os.path.join(Path.home(), "Downloads", "Amusing", "appconfig.yaml")
 
     # Check if the file exists
