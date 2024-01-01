@@ -10,7 +10,7 @@ packages = [{include = "amusing"}]
 amusing = "amusing.cli:app"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 brotli = "1.1.0"
 certifi = "2023.11.17"
 charset-normalizer = "3.3.2"
