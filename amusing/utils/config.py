@@ -13,7 +13,6 @@ def find_or_create_config_file():
 
     # Check if the file exists
     if os.path.exists(file_path):
-        print(f"Found existing file: {file_path}")
         return file_path
     else:
         # Create the file
