@@ -18,7 +18,7 @@ app = typer.Typer(
     help="Amusing CLI to help download music independently or from your exported apple music library.",
     add_completion=False,
 )
-__version__ = metadata.version(__package__)
+__version__ = metadata.version("amusing-app")
 
 
 def version_callback(value: bool) -> None:
