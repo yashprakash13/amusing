@@ -1,0 +1,9 @@
+songs
+Library_parsed.csv
+Library.xml
+rough
+.venv
+data
+__pycache__
+library.db
+appconfig.yaml
