@@ -7,3 +7,4 @@ data
 __pycache__
 library.db
 appconfig.yaml
+dist
