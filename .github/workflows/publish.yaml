@@ -1,0 +1,21 @@
+name: Release to PyPI
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    name: Release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Build and publish to pypi
+        uses: JRubics/poetry-publish@v1.13
+        with:
+          pypi_token: ${{ secrets.PYPI_TOKEN }}
