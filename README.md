@@ -152,3 +152,11 @@ Album to look up:  Human
 
 1. Provide an option to choose which searched result is downloaded.
 2. Provide a command to show all songs in an album
+3. Provide a command to download a song from youtube link
+4. Better metadata availability (Musicbrainz, Discog etc)
+5. Coverarts (Musicbrainz, somewhere else?)
+6. Lyrics!
+7. Look at which music player to integrate with, make changes to architecture of the library accordingly. The Music player needs to have:
+   - Aesthetic UI, intuitive UX similar to Apple Music or Spotify
+   - Play count, gapless playback, fade-in-out playback
+   - Docker compose support
