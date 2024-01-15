@@ -1,3 +1,4 @@
+import os
 from importlib import metadata
 from typing import Annotated
 
@@ -107,3 +108,23 @@ def show_similar_artists_in_db(
     for res in results:
         table.add_row(res["name"], str(res["number_of_songs"]))
     console.print(table)
+
+
+@app.command("fetchmetadataall")
+def fetch_metadata_all():
+    """Start looking up metadata for all songs/albums in the library."""
+    typer.echo("Starting metadata search...")
+    ROOT_DIR_NEW = "/Users/costa/Desktop/ToDelete soon/new_song_dir"
+    ROOT_DIR = "/Users/costa/Desktop/ToDelete soon"
+    all_albums = [
+        d for d in os.listdir(ROOT_DIR) if os.path.isdir(os.path.join(ROOT_DIR, d))
+    ]
+    for album in all_albums:
+        typer.echo("========================================")
+        typer.echo(f"Processing album: {album}")
+        songs_in_directory = os.listdir(album)
+
+        for song in songs_in_directory:
+            typer.echo(f"Processing song: {song}")
+
+            typer.echo("-------------------------")

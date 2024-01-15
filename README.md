@@ -160,3 +160,6 @@ Album to look up:  Human
    - Aesthetic UI, intuitive UX similar to Apple Music or Spotify
    - Play count, gapless playback, fade-in-out playback
    - Docker compose support
+8. Modify/edit album names, artists manually
+9. Delete songs, albums manually
+10. Add/find Play Count equivalent in music player or in db
