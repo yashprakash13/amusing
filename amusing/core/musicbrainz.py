@@ -133,8 +133,6 @@ class MusicBrainzFetcher:
         """Remove all tags from a file."""
         mutagen_classes_list = self._mutagen_classes()
         for cls in mutagen_classes_list:
-            # Try opening the file with this type, but just skip in the
-            # event of any error.
             try:
                 f = cls(path)
             except Exception:
@@ -146,9 +144,6 @@ class MusicBrainzFetcher:
             try:
                 f.delete()
             except NotImplementedError:
-                # Some Mutagen metadata subclasses (namely, ASFTag) do not
-                # support .delete(), presumably because it is impossible to
-                # remove them. In this case, we just remove all the tags.
                 for tag in f.keys():
                     del f[tag]
                 f.save()
