@@ -14,6 +14,9 @@ class Album(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(nullable=False)
     songs: Mapped[List["Song"]] = relationship(back_populates="album")
+    album_mbid: Mapped[str]
+    album_artist: Mapped[str]
+    coverart_present: Mapped[bool] = mapped_column(default=False)
 
     def __repr__(self) -> str:
         return f"<Album= {self.name}>"
@@ -28,6 +31,11 @@ class Song(Base):
     video_id: Mapped[str]
     album_id: Mapped[int] = mapped_column(ForeignKey("albums.id"), nullable=False)
     album: Mapped["Album"] = relationship(back_populates="songs")
+    song_mbid: Mapped[str]
+    year: Mapped[int]
+    month: Mapped[int]
+    day: Mapped[int]
+    lyrics: Mapped[str]
 
     def __repr__(self):
         return f"<Song= {self.name} by {self.artist}>"

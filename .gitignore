@@ -8,3 +8,5 @@ __pycache__
 library.db
 appconfig.yaml
 dist
+rough.py
+temp
