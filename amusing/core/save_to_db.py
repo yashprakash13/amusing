@@ -1,8 +1,9 @@
 import os
 
+from sqlalchemy import and_, or_, update
 from sqlalchemy.orm import Session
 
-from amusing.db.models import Album, Song
+from amusing.db.models import Album, MetadataMoveAlbum, Song
 
 
 def create_new_album(
@@ -79,17 +80,26 @@ def create_new_song(
         return 1
 
 
-def get_song_from_name_and_artist(
-    song_name: str, artist_name: str, session: Session
+def get_song_from_name_and_album(
+    song_name: str, album_id: int, session: Session
 ) -> Song:
     """To return a song from song table."""
     try:
         song_query = (
-            session.query(Song).filter_by(name=song_name, artist=artist_name).first()
+            session.query(Song).filter_by(name=song_name, album_id=album_id).first()
         )
         if song_query:
             return song_query
         else:
+            song_query = (
+                session.query(Song)
+                .filter(
+                    and_(Song.album_id == album_id, Song.name.ilike(f"%{song_name}%"))
+                )
+                .all()
+            )
+            if song_query:
+                return song_query[0]
             return None
     except Exception as e:
         print(f"Exception {e} when getting the song.")
@@ -110,7 +120,9 @@ def modify_song(song: Song, row_values: dict, session: Session):
 def get_album_from_name(album_name: str, session: Session) -> Album:
     """To return an album from album table."""
     try:
-        album_query = session.query(Song).filter_by(name=album_name).first()
+        album_query = (
+            session.query(Album).filter(Album.name.ilike(f"%{album_name}%")).first()
+        )
         if album_query:
             return album_query
         else:
@@ -123,9 +135,23 @@ def get_album_from_name(album_name: str, session: Session) -> Album:
 def modify_album(album: Album, row_values: dict, session: Session):
     """To modify a given album."""
     try:
-        for key, val in row_values.items():
-            setattr(album, key, val)
+        print(f"Modifying {album.name} with {row_values}")
+        stmt = update(Album).where(Album.id == album.id).values(row_values)
+        session.execute(stmt)
         session.commit()
     except Exception as e:
         print(f"Exception {e} when modifying the album.")
+        return 1
+
+
+def create_new_metadata_album_entry(metadata: dict, session: Session):
+    """To create a new MetadataMoveAlbum row."""
+    try:
+        metadata_row = MetadataMoveAlbum(
+            am_album_name=metadata["am_album_name"], album_id=metadata["album_id"]
+        )
+        session.add(metadata_row)
+        session.commit()
+    except Exception as e:
+        print(f"Exception {e} when creating the metadata row.")
         return 1

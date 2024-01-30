@@ -39,3 +39,11 @@ class Song(Base):
 
     def __repr__(self):
         return f"<Song= {self.name} by {self.artist}>"
+
+
+class MetadataMoveAlbum(Base):
+    __tablename__ = "metadatamovealbum"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    am_album_name: Mapped[str] = mapped_column(nullable=False)
+    album_id: Mapped[int] = mapped_column(ForeignKey("albums.id"), nullable=False)

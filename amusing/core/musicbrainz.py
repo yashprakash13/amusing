@@ -97,7 +97,7 @@ class MusicBrainzFetcher:
             temp_image_path = os.path.join(album_path, f"image_{index}")
             with open(temp_image_path, "wb") as file:
                 cover_art_bin = musicbrainzngs.get_image(album_mbid, cover_art["id"])
-                print(f"This is of type: {cover_art['types'][0]}")
+                # print(f"This is of type: {cover_art['types'][0]}")
                 file.write(cover_art_bin)
             if cover_art["types"][0] == "Front":
                 image_path = os.path.join(album_path, f"Front_{index}" + ".png")

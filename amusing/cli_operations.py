@@ -3,10 +3,18 @@ import os
 from amusing.core.download import download_song_from_id
 from amusing.core.parse_csv import process_csv
 from amusing.core.parse_xml import parse_library_xml
-from amusing.core.save_to_db import create_new_album, create_new_song
+from amusing.core.save_to_db import (
+    create_new_album,
+    create_new_metadata_album_entry,
+    create_new_song,
+    get_album_from_name,
+    get_song_from_name_and_album,
+    modify_album,
+    modify_song,
+)
 from amusing.core.search import search_a_song
 from amusing.db.engine import get_new_db_session
-from amusing.db.models import Album, Song
+from amusing.db.models import Album, MetadataMoveAlbum, Song
 from amusing.utils.funcs import construct_db_path, construct_download_path
 
 
@@ -121,7 +129,9 @@ def show_similar_songs_for_artist_in_db_operation(
     return song_list_found
 
 
-def show_similar_albums_in_db_operation(album_name: str, root_download_path: str):
+def show_similar_albums_in_db_operation(
+    album_name: str, root_download_path: str
+) -> list:
     """Look up the db for album_name.
 
     Parameters:
@@ -137,3 +147,88 @@ def show_similar_albums_in_db_operation(album_name: str, root_download_path: str
             {"name": album.name, "number_of_songs": len(album.songs)}
         )
     return album_list_found
+
+
+def modify_album_in_db(album: Album, new_album_info: dict, root_download_path: str):
+    """Get the album in db and save it with the new info. Typically executed during metadata search and tag operation.
+
+    Parameters:
+    old_album_info (dict): dict of album info
+    new_album_info (dict): dict of new album info
+    root_download_path (str): the path to the root downloads folder where the db is situated.
+
+    """
+    session = get_new_db_session(construct_db_path(root_download_path))
+    error = modify_album(album, new_album_info, session)
+    if error:
+        print("Something went wrong saving the modified album info.")
+
+
+def modify_song_in_db(
+    old_song_info: dict, new_song_info: dict, root_download_path: str
+):
+    """Get the song in db and save it with the new info. Typically executed during metadata search and tag operation.
+
+    Parameters:
+    old_song_info (dict): dict of song info that includes name and album_id fields
+    new_song_info (dict): dict of new song info
+    root_download_path (str): the path to the root downloads folder where the db is situated.
+
+    """
+    session = get_new_db_session(construct_db_path(root_download_path))
+    print(f"Getting song info from: {old_song_info}")
+    song = get_song_from_name_and_album(
+        old_song_info["name"], old_song_info["album_id"], session
+    )
+    print("Got song=> ", song)
+    error = modify_song(song, new_song_info, session)
+    if error:
+        return 1
+
+
+def if_album_metadata_processed(am_album_name: str, root_download_path: str) -> Album:
+    """Check whether the album was processed already and return the object from the Album table.
+
+    Parameters:
+    am_album_name (str): to check in the MetadataMoveAlbum table
+    root_download_path (str): the path to the root downloads folder where the db is situated.
+
+    """
+    session = get_new_db_session(construct_db_path(root_download_path))
+    album_metadata_table_obj = (
+        session.query(MetadataMoveAlbum).filter_by(am_album_name=am_album_name).first()
+    )
+    if album_metadata_table_obj:
+        album_id = album_metadata_table_obj.album_id
+        return session.query(Album).filter_by(id=album_id).first()
+    return None
+
+
+def create_album_metadata_in_db(album_metadata: dict, root_download_path: str):
+    """
+    Create a new row in the MetadataMoveAlbum table.
+
+    Parameters:
+    album_metadata (dict): The column values as dict
+    root_download_path (str): the path to the root downloads folder where the db is situated.
+
+    """
+    session = get_new_db_session(construct_db_path(root_download_path))
+    error = create_new_metadata_album_entry(album_metadata, session)
+    if error:
+        return "Something went wrong in creating a metadata entry. Please try again."
+    return "Added metadata entry to db!"
+
+
+def get_album_from_db(album_name: str, root_download_path: str):
+    """
+    Get and return Album obj from the Album table.
+
+    Parameters:
+    album_name (dict): The album name to fetch
+    root_download_path (str): the path to the root downloads folder where the db is situated.
+
+    """
+    session = get_new_db_session(construct_db_path(root_download_path))
+    album = get_album_from_name(album_name, session)
+    return album
