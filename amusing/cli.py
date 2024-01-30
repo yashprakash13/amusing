@@ -157,7 +157,7 @@ def fetch_metadata_all(
         if album_returned_from_db:
             album_json_data = mb.get_release_by_id(album_returned_from_db.album_mbid)
             typer.echo(
-                f"Album fetched from db: \nName: {album_json_data['title']}\nArtists: {album_json_data['artist-credit-phrase']}\nDate: {album_json_data['date']}\nTrack count: {album_json_data['medium-list'][0]['track-count']}"
+                f"Album fetched from db: \nName: {mb.get_true_album_name(album_json_data)}\nArtists: {album_json_data['artist-credit-phrase']}\nDate: {album_json_data['date']}\nTrack count: {album_json_data['medium-list'][0]['track-count']}"
             )
             fetch_and_save_metadata(
                 album,
@@ -173,7 +173,7 @@ def fetch_metadata_all(
         responses, responses_dict_root_key = mb.search_releases(album_name=album)
         for album_json_data in responses[responses_dict_root_key]:
             typer.echo(
-                f"This album info was fetched: \nName: {album_json_data['title']}\nArtists: {album_json_data['artist-credit-phrase']}\nDate: {album_json_data['date']}\nTrack count: {album_json_data['medium-list'][0]['track-count']}"
+                f"This album info was fetched: \nName: {mb.get_true_album_name(album_json_data)}\nArtists: {album_json_data['artist-credit-phrase']}\nDate: {album_json_data['date']}\nTrack count: {album_json_data['medium-list'][0]['track-count']}"
             )
             album_found_correct = typer.prompt(
                 f"Is this fetched album info correct? Y for yes, N for no, ID to enter Musicbrainz release ID manually",
@@ -185,7 +185,7 @@ def fetch_metadata_all(
                     album_mbid = typer.prompt("Enter MBID for Album/Release")
                     album_json_data = mb.get_release_by_id(album_mbid)
                     typer.echo(
-                        f"This album info was fetched from entered MBID: \nName: {album_json_data['title']}\nArtists: {album_json_data['artist-credit-phrase']}\nDate: {album_json_data['date']}\nTrack count: {album_json_data['medium-list'][0]['track-count']}"
+                        f"This album info was fetched from entered MBID: \nName: {mb.get_true_album_name(album_json_data)}\nArtists: {album_json_data['artist-credit-phrase']}\nDate: {album_json_data['date']}\nTrack count: {album_json_data['medium-list'][0]['track-count']}"
                     )
                 fetch_and_save_metadata(
                     album,
@@ -214,7 +214,7 @@ def fetch_and_save_metadata(
     album_path = os.path.join(
         ROOT_DIR_NEW,
         album_json_data["artist-credit-phrase"],
-        album_json_data["title"],
+        mb.get_true_album_name(album_json_data),
     )
     os.makedirs(album_path, exist_ok=True)
     if fetch_coverart:
@@ -255,7 +255,7 @@ def fetch_and_save_metadata(
         metadata_dict = {
             "title": recording_mb["recording"]["title"],
             "artist": recording_mb["recording"]["artist-credit-phrase"],
-            "album": album_json_data["title"],
+            "album": mb.get_true_album_name(album_json_data),
             "year": year,
             "month": month,
             "day": day,
@@ -305,7 +305,7 @@ def fetch_and_save_metadata(
             + glob(os.path.join(album_path, "*.jpeg"))
         )
         new_album_info_dict = {
-            "name": album_json_data["title"],
+            "name": mb.get_true_album_name(album_json_data),
             "album_mbid": album_json_data["id"],
             "album_artist": album_json_data["artist-credit-phrase"],
             "coverart_present": any(if_coverart_saved),

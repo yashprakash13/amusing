@@ -150,6 +150,12 @@ class MusicBrainzFetcher:
             except (OSError, mutagen.MutagenError) as exc:
                 print("could not scrub {0}: {1}", path, exc)
 
+    def get_true_album_name(self, album_json_data: dict) -> str:
+        try:
+            return f"{album_json_data['title']} ({album_json_data['disambiguation']})"
+        except:
+            return album_json_data["title"]
+
     def perform_metadata_addition_to_mediafile(
         self, audio_file_path_dest: str, metadata_dict: dict
     ):
