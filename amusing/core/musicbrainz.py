@@ -119,7 +119,7 @@ class MusicBrainzFetcher:
         if result[1] >= threshold:
             return result[0], result[2]
         else:
-            return None
+            return None, None
 
     def _mutagen_classes(self):
         """Get a list of file type classes from the Mutagen module."""
@@ -151,10 +151,19 @@ class MusicBrainzFetcher:
                 print("could not scrub {0}: {1}", path, exc)
 
     def get_true_album_name(self, album_json_data: dict) -> str:
+        """Used to get album name with or without disambiguation from given album details from MB."""
         try:
             return f"{album_json_data['title']} ({album_json_data['disambiguation']})"
         except:
             return album_json_data["title"]
+
+    def get_true_song_name(self, song_json_data: dict) -> str:
+        """Used to get song name without illegal filename characters from given song details from MB."""
+        # Define the pattern for illegal characters
+        illegal_chars = r'[<>:"/\\|?*\x00-\x1F\x7F]'
+        # Replace the illegal characters with an underscore
+        cleaned_filename = re.sub(illegal_chars, "-", song_json_data["title"])
+        return cleaned_filename
 
     def perform_metadata_addition_to_mediafile(
         self, audio_file_path_dest: str, metadata_dict: dict
@@ -185,7 +194,7 @@ class MusicBrainzFetcher:
     def get_recording_by_id(self, recording_id):
         recording_mb = musicbrainzngs.get_recording_by_id(
             recording_id, includes=["artists", "releases"]
-        )
+        )["recording"]
         return recording_mb
 
     def get_release_by_id(self, album_mbid):

@@ -225,42 +225,44 @@ def fetch_and_save_metadata(
         typer.echo(f"\t{item['title']} by {item['artist-credit-phrase']}")
     for recording in all_recordings_dict:
         closest_match, index_closest_match = mb.find_closest_match(
-            recording["title"], songs_in_directory_clean, 80
+            mb.get_true_song_name(recording), songs_in_directory_clean, 80
         )
+        if not closest_match:
+            typer.echo(
+                f"Song {mb.get_true_song_name(recording)} not in the collection. Skipping."
+            )
+            continue
         audio_file_path = os.path.join(
             ROOT_DIR, album, songs_in_directory[index_closest_match]
         )
         _, file_extension = os.path.splitext(audio_file_path)
         audio_file_path_dest = os.path.join(
-            album_path, f"{recording['title']}{file_extension}"
+            album_path, f"{mb.get_true_song_name(recording)}{file_extension}"
         )
-        if not closest_match:
-            typer.echo(f"Song {recording['title']} not in the collection. Skipping.")
-            continue
         if os.path.exists(audio_file_path_dest):
             typer.echo(
-                f"Song {recording['title']} already present in the collection. Skipping."
+                f"Song {mb.get_true_song_name(recording)} already present in the collection. Skipping."
             )
             continue
         recording_mb = mb.get_recording_by_id(recording["id"])
         typer.echo(
-            f"Processing song: {recording['title']} by {recording_mb['recording']['artist-credit-phrase']} with song from disk: {closest_match}"
+            f"Processing song: {mb.get_true_song_name(recording)} by {recording_mb['artist-credit-phrase']} with song from disk: {closest_match}"
         )
         date_object = datetime.strptime(
-            recording_mb["recording"]["release-list"][0]["date"], "%Y-%m-%d"
+            recording_mb["release-list"][0]["date"], "%Y-%m-%d"
         )
         year = date_object.year
         month = date_object.month
         day = date_object.day
         metadata_dict = {
-            "title": recording_mb["recording"]["title"],
-            "artist": recording_mb["recording"]["artist-credit-phrase"],
+            "title": mb.get_true_song_name(recording_mb),
+            "artist": recording_mb["artist-credit-phrase"],
             "album": mb.get_true_album_name(album_json_data),
             "year": year,
             "month": month,
             "day": day,
             "albumartist": album_json_data["artist-credit-phrase"],
-            "mb_trackid": recording_mb["recording"]["id"],
+            "mb_trackid": recording_mb["id"],
             "mb_albumid": album_json_data["id"],
         }
         shutil.copy(audio_file_path, album_path)
@@ -276,9 +278,9 @@ def fetch_and_save_metadata(
         error = modify_song_in_db(
             old_song_info={"name": filename, "album_id": album_db_obj.id},
             new_song_info={
-                "name": recording_mb["recording"]["title"],
-                "artist": recording_mb["recording"]["artist-credit-phrase"],
-                "song_mbid": recording_mb["recording"]["id"],
+                "name": mb.get_true_song_name(recording_mb),
+                "artist": recording_mb["artist-credit-phrase"],
+                "song_mbid": recording_mb["id"],
                 "year": int(year),
                 "month": int(month),
                 "day": int(day),
