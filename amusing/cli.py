@@ -223,15 +223,17 @@ def fetch_and_save_metadata(
     typer.echo("Found all recordings: ")
     for item in all_recordings_dict:
         typer.echo(f"\t{item['title']} by {item['artist-credit-phrase']}")
+    song_indices_matched = []
     for recording in all_recordings_dict:
         closest_match, index_closest_match = mb.find_closest_match(
             mb.get_true_song_name(recording), songs_in_directory_clean, 80
         )
         if not closest_match:
             typer.echo(
-                f"Song {mb.get_true_song_name(recording)} not in the collection. Skipping."
+                f"Song {mb.get_true_song_name(recording)} not found in the collection. Skipping."
             )
             continue
+        song_indices_matched.append(index_closest_match)
         audio_file_path = os.path.join(
             ROOT_DIR, album, songs_in_directory[index_closest_match]
         )
@@ -319,3 +321,114 @@ def fetch_and_save_metadata(
             root_download_path=APP_CONFIG["root_download_path"],
         )
         typer.echo(f"Written album to db: {album_db_obj}")
+
+    # try prompting the user for the songs not matched
+    if len(songs_in_directory) != len(song_indices_matched):
+        try_skipped_songs(
+            song_indices_matched,
+            songs_in_directory,
+            songs_in_directory_clean,
+            all_recordings_dict,
+            ROOT_DIR,
+            album,
+            album_path,
+            mb,
+            album_json_data,
+            album_db_obj,
+        )
+
+
+def try_skipped_songs(
+    song_indices_matched: list,
+    songs_in_directory: list,
+    songs_in_directory_clean: list,
+    all_recordings_dict: dict,
+    ROOT_DIR,
+    album,
+    album_path,
+    mb,
+    album_json_data,
+    album_db_obj,
+):
+    """To try and fetch songs that weren't fetched during metadata crawl of the album."""
+    indices_not_matched = [
+        i for i in range(len(songs_in_directory)) if i not in song_indices_matched
+    ]
+
+    for index in indices_not_matched:
+        typer.echo(
+            f"\nSong {songs_in_directory_clean[index]} in the album on disk wasn't matched. Select a recording from the fetched Musicbrainz recordings that match the given song on disk: "
+        )
+        for i, recording in enumerate(all_recordings_dict):
+            typer.echo(
+                f"\t{i+1}: {recording['title']} by {recording['artist-credit-phrase']}"
+            )
+        selection_index = typer.prompt(
+            f"Select a song 1 to {len(all_recordings_dict)} or s to skip this song"
+        )
+        if selection_index == "s" or selection_index == "S":
+            continue
+        if not selection_index.isdigit() or selection_index > len(all_recordings_dict):
+            typer.echo("Wrong index entered. Skipping song.")
+            continue
+        selection_index = selection_index - 1
+        recording = all_recordings_dict[selection_index]
+        audio_file_path = os.path.join(
+            ROOT_DIR, album, songs_in_directory[selection_index]
+        )
+        _, file_extension = os.path.splitext(audio_file_path)
+        audio_file_path_dest = os.path.join(
+            album_path, f"{mb.get_true_song_name(recording)}{file_extension}"
+        )
+        if os.path.exists(audio_file_path_dest):
+            typer.echo(
+                f"Song {mb.get_true_song_name(recording)} already present in the collection. Skipping."
+            )
+            continue
+        recording_mb = mb.get_recording_by_id(recording["id"])
+        typer.echo(
+            f"Processing song: {mb.get_true_song_name(recording)} by {recording_mb['artist-credit-phrase']} with song from disk: {songs_in_directory[index]}"
+        )
+        date_object = datetime.strptime(
+            recording_mb["release-list"][0]["date"], "%Y-%m-%d"
+        )
+        year = date_object.year
+        month = date_object.month
+        day = date_object.day
+        metadata_dict = {
+            "title": mb.get_true_song_name(recording_mb),
+            "artist": recording_mb["artist-credit-phrase"],
+            "album": mb.get_true_album_name(album_json_data),
+            "year": year,
+            "month": month,
+            "day": day,
+            "albumartist": album_json_data["artist-credit-phrase"],
+            "mb_trackid": recording_mb["id"],
+            "mb_albumid": album_json_data["id"],
+        }
+        shutil.copy(audio_file_path, album_path)
+        os.rename(
+            os.path.join(album_path, songs_in_directory[index]),
+            audio_file_path_dest,
+        )
+        mb.scrub(audio_file_path_dest)
+        mb.perform_metadata_addition_to_mediafile(audio_file_path_dest, metadata_dict)
+
+        # Do db operation on song because it's new
+        filename, _ = os.path.splitext(songs_in_directory_clean[index])
+        error = modify_song_in_db(
+            old_song_info={"name": filename, "album_id": album_db_obj.id},
+            new_song_info={
+                "name": mb.get_true_song_name(recording_mb),
+                "artist": recording_mb["artist-credit-phrase"],
+                "song_mbid": recording_mb["id"],
+                "year": int(year),
+                "month": int(month),
+                "day": int(day),
+            },
+            root_download_path=APP_CONFIG["root_download_path"],
+        )
+        if not error:
+            typer.echo("Written song to db.")
+
+        typer.echo("-------------------------")
