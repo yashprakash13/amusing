@@ -24,6 +24,7 @@ from amusing.cli_operations import (
 )
 from amusing.core.musicbrainz import MusicBrainzFetcher
 from amusing.utils.config import APP_CONFIG
+from amusing.utils.funcs import construct_download_path
 
 app = typer.Typer(
     help="Amusing CLI to help download music independently or from your exported apple music library.",
@@ -123,15 +124,14 @@ def show_similar_artists_in_db(
 @app.command("fetchmetadataall")
 def fetch_metadata_all(
     root_dir: Annotated[
-        str, typer.Argument(help="The directory to find your current music.")
-    ],
-    root_dir_new: Annotated[
-        str, typer.Argument(help="The directory to keep your organized music.")
-    ],
+        str,
+        typer.Argument(
+            help="The directory to find your current music. Default is taken from amusing config."
+        ),
+    ] = construct_download_path(APP_CONFIG["root_download_path"])
 ):
     """Start looking up metadata for all songs/albums in the library."""
     typer.echo("Starting metadata search...")
-    ROOT_DIR_NEW = "/Users/costa/Desktop/ToDelete soon/new_song_dir"
     ROOT_DIR = "/Users/costa/Desktop/ToDelete soon/old_song_dir"
     all_albums = [
         d for d in os.listdir(ROOT_DIR) if os.path.isdir(os.path.join(ROOT_DIR, d))
