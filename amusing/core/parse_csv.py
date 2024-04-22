@@ -141,7 +141,7 @@ def process_csv(filename: str, download_path: str, session: Session):
             session.commit()
 
         # Submit the group processing task to the ThreadPoolExecutor
-        process_groups(album_name, album_dir, group, album, dir_already_present)
+        process_groups(album_name, album_dir, group, session, album, dir_already_present)
 
         # Sleep after every 5th group
         if len(group) >= 5:
