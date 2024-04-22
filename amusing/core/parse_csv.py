@@ -83,8 +83,7 @@ def process_groups(
                         "preferredcodec": "m4a",
                     }
                 ],
-                "paths": {"home": album_dir},
-                "outtmpl": {"pl_thumbnail": ""},
+                "outtmpl": f"{album_dir}/{song_name}.%(ext)s",
                 "postprocessors": [
                     {"already_have_thumbnail": False, "key": "EmbedThumbnail"}
                 ],
