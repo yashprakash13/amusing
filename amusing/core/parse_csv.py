@@ -46,8 +46,8 @@ def process_groups(
     print(f"Processing album: {album_name}")
     files_in_album = os.listdir(album_dir)
     for index, row in group.iterrows():
-        song_name = row["Name"]
-        artist_name = row["Artist"]
+        song_name = row["Name"].replace('/', u"\u2215")
+        artist_name = row["Artist"].replace('/', u"\u2215")
         genre = row["Genre"]
         track = row["Track Number"]
         tracks = row["Track Count"]
@@ -57,7 +57,7 @@ def process_groups(
             for file_name in files_in_album:
                 if (song_name.lower() in file_name.lower()):
                     song_already_present = True
-                    print("Song downloaded already. Skipping.")
+                    print(f"Song downloaded already. Skipping '{song_name}'.")
                     break
             if song_already_present:
                 continue
@@ -96,8 +96,8 @@ def process_groups(
                 print("Error=> ", error_code)
 
             add_metadata(
-                f"{album_dir}/{song_name}.m4a",
-                f"{album_dir}/../../songs/{song_name}.m4a",
+                os.path.join(album_dir, f"{song_name}.m4a"),
+                os.path.join(album_dir, '..', '..', 'songs', f"{song_name}.m4a"),
                 album_dir,
                 title=song_name,
                 album=album_name,
@@ -123,7 +123,6 @@ def process_groups(
             print(
                 f"Done song: '{song_name}', Album='{album_name}', Artist='{artist_name}'"
             )
-            time.sleep(1)
         except Exception as e:
             print(f"Exception {e}. Skipping '{song_name}'.")
             continue
@@ -135,14 +134,12 @@ def process_csv(filename: str, download_path: str, session: Session):
     df = pd.read_csv(filename)
     grouped = df.groupby("Album")
 
-    sleep_after_5th = 5
-    sleep_after_10th = 11
-
     songs_dir = os.path.join(download_path, 'songs')
     if not (os.path.exists(songs_dir) and os.path.isdir(songs_dir)):
         os.makedirs(songs_dir, exist_ok=True)
 
     for album_name, group in grouped:
+        album_name = album_name.replace('/', u"\u2215")
         album_dir = os.path.join(download_path, 'albums', album_name)
         dir_already_present = False
         if os.path.exists(album_dir) and os.path.isdir(album_dir):
@@ -158,11 +155,3 @@ def process_csv(filename: str, download_path: str, session: Session):
 
         # Submit the group processing task to the ThreadPoolExecutor
         process_groups(album_name, album_dir, group, session, album, dir_already_present)
-
-        # Sleep after every 5th group
-        if len(group) >= 5:
-            time.sleep(sleep_after_5th)
-
-        # Sleep after every 10th group
-        if len(group) >= 10:
-            time.sleep(sleep_after_10th)
