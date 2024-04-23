@@ -64,18 +64,22 @@ def parse_library_operation(root_download_path: str, lib_path: str):
 
     Parameters:
     root_download_path (str): the path to download songs and put db into.
-    lib_path (str): the full path to the Library.xml file exported from Apple Music.
+    lib_path (str): the full path to the Library.xml file exported from Apple Music or a Library_parsed.csv file
 
     """
-    error = parse_library_xml(root_download_path, lib_path)
-    if error:
-        return "Something went wrong in creating a parsed CSV file from XML. Please try again."
+    if lib_path.lower().endswith('.xml'):
+        error = parse_library_xml(root_download_path, lib_path)
+        if error:
+            return "Something went wrong in creating a parsed CSV file from XML. Please try again."
+        parsed_library = os.path.join(root_download_path, "Library_parsed.csv")
+    elif lib_path.lower().endswith('.csv'):
+        parsed_library = lib_path
+    else:
+        return "A 'Library.xml' or 'Library_parsed.csv' file was expected."
 
     download_path = construct_download_path(root_download_path)
     session = get_new_db_session(construct_db_path(root_download_path))
-    process_csv(
-        os.path.join(root_download_path, "Library_parsed.csv"), download_path, session
-    )
+    process_csv(parsed_library, download_path, session)
 
 
 def show_similar_songs_in_db_operation(song_name: str, root_download_path: str):

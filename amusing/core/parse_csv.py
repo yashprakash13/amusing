@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import subprocess
 
 import pandas as pd
 import yt_dlp
@@ -11,14 +12,27 @@ from amusing.db.models import Album, Song
 
 ytmusic = YTMusic()
 
-
-def extract_song_info(song_file):
-    match = re.match(r"^(.*?) \[(.*?)\]$", song_file)
-    if match:
-        return match.group(1), match.group(2)
-    else:
-        return song_file, ""
-
+def add_metadata(
+    input_file,
+    output_file,
+    title=None,
+    album=None,
+    artist=None,
+    genre=None,
+):
+    subprocess.run([
+        'ffmpeg',
+        '-y',
+        '-i', input_file,
+        '-metadata', f"title={title}",
+        '-metadata', f"album={album}",
+        '-metadata', f"artist={artist}",
+        '-metadata', f"genre={genre}",
+        '-acodec', 'copy',
+        '-vcodec', 'mjpeg',
+        '-vf', "crop=w='min(iw\,ih)':h='min(iw\,ih)',scale=500:500,setsar=1",
+        output_file
+    ])
 
 def process_groups(
     album_name, album_dir, group, session, album=None, dir_already_present=False
@@ -29,41 +43,21 @@ def process_groups(
     for index, row in group.iterrows():
         song_name = row["Name"]
         artist_name = row["Artist"]
+        genre = row["Genre"]
 
         if dir_already_present:
             song_already_present = False
             for file_name in files_in_album:
-                if (
-                    song_name.lower() in file_name.lower()
-                    or file_name.lower() in song_name.lower()
-                ):
+                if (song_name.lower() in file_name.lower()):
                     song_already_present = True
                     print("Song downloaded already. Skipping.")
-                    # check if song also present in db, if not add to db
-                    song_query = (
-                        session.query(Song)
-                        .filter_by(name=song_name, artist=artist_name, album=album)
-                        .first()
-                    )
-                    if not song_query:
-                        print("Song not in db. Adding.")
-                        _, song_id = extract_song_info(file_name)
-                        song = Song(
-                            name=song_name,
-                            artist=artist_name,
-                            video_id=song_id,
-                            album=album,
-                        )
-                        session.add(song)
-                        session.commit()
-                        print("Song added to db.")
                     break
             if song_already_present:
                 continue
 
         # Perform operations on the row
         print(
-            f"Processing song: Album='{album_name}', Song='{song_name}', Artist='{artist_name}'"
+            f"Processing song: '{song_name}', Album='{album_name}', Artist='{artist_name}'"
         )
         try:
             search_results = ytmusic.search(
@@ -83,16 +77,25 @@ def process_groups(
                         "preferredcodec": "m4a",
                     }
                 ],
-                "paths": {"home": album_dir},
-                "outtmpl": {"pl_thumbnail": ""},
+                "outtmpl": f"{album_dir}/{song_name}.%(ext)s",
                 "postprocessors": [
                     {"already_have_thumbnail": False, "key": "EmbedThumbnail"}
                 ],
+                "write_thumbnail": True,
                 "writethumbnail": True,
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 error_code = ydl.download(song_url)
                 print("Error=> ", error_code)
+
+            add_metadata(
+                f"{album_dir}/{song_name}.m4a",
+                f"{album_dir}/../{song_name}.m4a",
+                title=song_name,
+                album=album_name,
+                artist=artist_name,
+                genre=genre,
+            )
 
             # check if song present in db, if yes, remove and add this one.
             song_query = (
@@ -108,14 +111,13 @@ def process_groups(
             session.add(song)
             session.commit()
             print(
-                f"Done song: Album='{album_name}', Song='{song_name}', Artist='{artist_name}'"
+                f"Done song: '{song_name}', Album='{album_name}', Artist='{artist_name}'"
             )
             time.sleep(1)
         except Exception as e:
-            print(f"Exception {e}. Skipping song.")
+            print(f"Exception {e}. Skipping '{song_name}'.")
             continue
     print(f"Done album '{album_name}'")
-    time.sleep(5)
 
 
 def process_csv(filename: str, download_path: str, session: Session):
@@ -141,7 +143,7 @@ def process_csv(filename: str, download_path: str, session: Session):
             session.commit()
 
         # Submit the group processing task to the ThreadPoolExecutor
-        process_groups(album_name, album_dir, group, album, dir_already_present)
+        process_groups(album_name, album_dir, group, session, album, dir_already_present)
 
         # Sleep after every 5th group
         if len(group) >= 5:
