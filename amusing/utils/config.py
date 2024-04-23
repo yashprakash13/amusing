@@ -20,7 +20,7 @@ def find_or_create_config_file():
             # Write default configuration (you can customize this)
             config_data = {
                 "root_download_path": str(
-                    os.path.join(Path.home(), "Downloads", "Amusing", "data")
+                    os.path.join(Path.home(), "Downloads", "Amusing")
                 ),
                 "db_name": "library.db",
             }

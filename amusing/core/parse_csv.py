@@ -15,10 +15,13 @@ ytmusic = YTMusic()
 def add_metadata(
     input_file,
     output_file,
+    album_dir,
     title=None,
     album=None,
     artist=None,
     genre=None,
+    track=None,
+    tracks=None,
 ):
     subprocess.run([
         'ffmpeg',
@@ -28,9 +31,11 @@ def add_metadata(
         '-metadata', f"album={album}",
         '-metadata', f"artist={artist}",
         '-metadata', f"genre={genre}",
+        '-metadata', f"track={track}/{tracks}",
         '-acodec', 'copy',
-        '-vcodec', 'mjpeg',
-        '-vf', "crop=w='min(iw\,ih)':h='min(iw\,ih)',scale=500:500,setsar=1",
+        '-vcodec', 'png',
+        '-disposition:v', 'attached_pic',
+        '-vf', "crop=w='min(iw\,ih)':h='min(iw\,ih)',scale=600:600,setsar=1",
         output_file
     ])
 
@@ -44,6 +49,8 @@ def process_groups(
         song_name = row["Name"]
         artist_name = row["Artist"]
         genre = row["Genre"]
+        track = row["Track Number"]
+        tracks = row["Track Count"]
 
         if dir_already_present:
             song_already_present = False
@@ -90,11 +97,14 @@ def process_groups(
 
             add_metadata(
                 f"{album_dir}/{song_name}.m4a",
-                f"{album_dir}/../{song_name}.m4a",
+                f"{album_dir}/../../songs/{song_name}.m4a",
+                album_dir,
                 title=song_name,
                 album=album_name,
                 artist=artist_name,
                 genre=genre,
+                track=track,
+                tracks=tracks,
             )
 
             # check if song present in db, if yes, remove and add this one.
@@ -128,8 +138,12 @@ def process_csv(filename: str, download_path: str, session: Session):
     sleep_after_5th = 5
     sleep_after_10th = 11
 
+    songs_dir = os.path.join(download_path, 'songs')
+    if not (os.path.exists(songs_dir) and os.path.isdir(songs_dir)):
+        os.makedirs(songs_dir, exist_ok=True)
+
     for album_name, group in grouped:
-        album_dir = os.path.join(download_path, album_name)
+        album_dir = os.path.join(download_path, 'albums', album_name)
         dir_already_present = False
         if os.path.exists(album_dir) and os.path.isdir(album_dir):
             dir_already_present = True
