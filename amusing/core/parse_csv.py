@@ -71,7 +71,7 @@ def process_csv(filename: str, session: Session):
             album = Album(title=album_title)
             album.tracks = row['Track Count']
             album.artist = row['Album Artist']
-            album.year = row['Year']
+            album.release_date = row['Release Date']
 
             session.add(album)
             session.commit()

@@ -15,7 +15,7 @@ class Album(Base):
     title: Mapped[str] = mapped_column(nullable=False)
     tracks: Mapped[int] = mapped_column(nullable=True)
     artist: Mapped[str] = mapped_column(nullable=True)
-    year: Mapped[int] = mapped_column(nullable=True)
+    release_date: Mapped[str] = mapped_column(nullable=True)
     songs: Mapped[List["Song"]] = relationship(back_populates="album")
 
     def __repr__(self) -> str:

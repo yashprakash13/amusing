@@ -50,7 +50,7 @@ def add_metadata(
             '-metadata', f"genre={song.genre}",
             '-metadata', f"track={song.track}/{album.tracks}",
             '-metadata', f"album_artist={album.artist}",
-            '-metadata', f"year={album.year}",
+            '-metadata', f"date={album.release_date}",
             '-acodec', 'copy',
             '-vcodec', 'png',
             '-disposition:v', 'attached_pic',
