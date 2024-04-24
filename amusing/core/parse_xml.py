@@ -60,11 +60,10 @@ def parse_library_xml(root_download_path: str, lib_path: str):
             return df
 
         df_apple_music = df_creation(apple_music, list(apple_music_cols))
-        # df_podcast = df_creation(podcast,podcast_cols)
-        # df_purchased = df_creation(purchased,purchased_cols)
+        df_apple_music['Video ID'] = pd.Series(dtype='str')
         print("Dataframe created of length: ", len(df_apple_music))
         df_apple_music.to_csv(
-            os.path.join(root_download_path, "Library_parsed.csv"), index=False
+            os.path.join(root_download_path, "Library.csv"), index=False
         )
     except Exception as e:
         print("Something went wrong in parsing your Library XML file: ", e)

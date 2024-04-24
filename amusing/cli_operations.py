@@ -13,18 +13,18 @@ def parse_library_operation(root_download_path: str, lib_path: str):
     """Parse the Library XML or CSV file.
 
     Parameters:
-    lib_path (str): the full path to the Library.xml file exported from Apple Music or a Library_parsed.csv file
+    lib_path (str): the full path to the Library.xml file exported from Apple Music or a Library.csv file
 
     """
     if lib_path.lower().endswith('.xml'):
         error = parse_library_xml(root_download_path, lib_path)
         if error:
             return "Something went wrong in creating a parsed CSV file from XML. Please try again."
-        parsed_library = os.path.join(root_download_path, "Library_parsed.csv")
+        parsed_library = os.path.join(root_download_path, "Library.csv")
     elif lib_path.lower().endswith('.csv'):
         parsed_library = lib_path
     else:
-        return "A 'Library.xml' or 'Library_parsed.csv' file was expected."
+        return "A 'Library.xml' or 'Library.csv' file was expected."
 
     session = get_new_db_session(construct_db_path(root_download_path))
     process_csv(parsed_library, session)

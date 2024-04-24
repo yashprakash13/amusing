@@ -55,7 +55,7 @@ def download_song(
 def parse_library(
     library_path: Annotated[
         str,
-        typer.Argument(help="The path to the 'Library.xml' or 'Library_parsed.csv' exported from Apple Music."),
+        typer.Argument(help="The path to the 'Library.xml' or 'Library.csv' exported from Apple Music."),
     ]
 ):
     """Parse the entire Apple Music library and make/update the DB as needed."""
@@ -66,7 +66,7 @@ def parse_library(
 def download_library(
     library_path: Annotated[
         str,
-        typer.Argument(help="[Optional] The path to the 'Library.xml' or 'Library_parsed.csv' exported from Apple Music."),
+        typer.Argument(help="[Optional] The path to the 'Library.xml' or 'Library.csv' exported from Apple Music."),
     ] = ""
 ):
     """Download the entire DB library.
