@@ -12,22 +12,28 @@ class Album(Base):
     __tablename__ = "albums"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(nullable=False)
+    title: Mapped[str] = mapped_column(nullable=False)
+    tracks: Mapped[int] = mapped_column(nullable=True)
+    artist: Mapped[str] = mapped_column(nullable=True)
+    year: Mapped[int] = mapped_column(nullable=True)
     songs: Mapped[List["Song"]] = relationship(back_populates="album")
 
     def __repr__(self) -> str:
-        return f"<Album= {self.name}>"
+        return f"<Album= {self.title}>"
 
 
 class Song(Base):
     __tablename__ = "songs"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[int] = mapped_column(nullable=False)
-    artist: Mapped[str]
-    video_id: Mapped[str]
+    title: Mapped[str] = mapped_column(nullable=False)
+    artist: Mapped[str] = mapped_column(nullable=False)
+    composer: Mapped[str] = mapped_column(nullable=True)
+    genre: Mapped[str] = mapped_column(nullable=True)
+    track: Mapped[int] = mapped_column(nullable=True)
+    video_id: Mapped[str] = mapped_column(nullable=False)
     album_id: Mapped[int] = mapped_column(ForeignKey("albums.id"), nullable=False)
     album: Mapped["Album"] = relationship(back_populates="songs")
 
     def __repr__(self):
-        return f"<Song= {self.name} by {self.artist}>"
+        return f"<Song= {self.title} by {self.artist}>"
