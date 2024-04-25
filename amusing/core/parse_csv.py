@@ -2,7 +2,7 @@ import pandas as pd
 from sqlalchemy.orm import Session
 
 from amusing.db.models import Album, Song
-import amusing.core.search
+from amusing.core.search import search
 
 def get_video_id(song: Song) -> str:
     """Return YouTube video ID of a song, searching it on YouTube Music if necessary."""

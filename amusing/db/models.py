@@ -5,7 +5,15 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
-    pass
+    def clone(self):
+        d = dict(self.__dict__)
+        if 'id' in d:
+            # Get rid of id
+            d.pop('id')
+        # Get rid of SQLAlchemy special attr
+        d.pop('_sa_instance_state')
+        copy = self.__class__(**d)
+        return copy
 
 
 class Album(Base):
@@ -20,6 +28,18 @@ class Album(Base):
 
     def __repr__(self) -> str:
         return f"<Album= {self.title}>"
+
+    def clone(self):
+        d = dict(self.__dict__)
+        if 'id' in d:
+            # Get rid of id
+            d.pop('id')
+        # Get rid of SQLAlchemy special attr
+        d.pop('_sa_instance_state')
+        if 'songs' in d:
+            d.pop('songs')
+        copy = self.__class__(**d)
+        return copy
 
 
 class Song(Base):
@@ -37,3 +57,14 @@ class Song(Base):
 
     def __repr__(self):
         return f"<Song= {self.title} by {self.artist}>"
+
+    def clone(self):
+        d = dict(self.__dict__)
+        if 'id' in d:
+            # Get rid of id
+            d.pop('id')
+        # Get rid of SQLAlchemy special attr
+        d.pop('_sa_instance_state')
+        d['album'] = self.album.clone()
+        copy = self.__class__(**d)
+        return copy

@@ -16,7 +16,7 @@ def search(song: Song) -> Song:
         raise RuntimeError(f"song not found on YouTube Music: '{song.title} - {song.album} - {song.artist}'")
 
     search_results = search_results[0]
-    result = song
+    result = song.clone()
     result.title = search_results["title"]
     if "artists" in search_results:
         result.artist = ", ".join(

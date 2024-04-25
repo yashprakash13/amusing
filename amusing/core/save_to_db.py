@@ -14,9 +14,9 @@ def create_new_album(album_name: str, album_dir: str, session: Session):
         else:
             os.makedirs(album_dir, exist_ok=True)
 
-        album = session.query(Album).filter_by(name=album_name).first()
+        album = session.query(Album).filter_by(title=album_name).first()
         if not album:
-            album = Album(name=album_name)
+            album = Album(title=album_name)
             session.add(album)
             session.commit()
         return album, 0
@@ -37,14 +37,14 @@ def create_new_song(
     try:
         song_query = (
             session.query(Song)
-            .filter_by(name=song_name, artist=artist_name, album=album)
+            .filter_by(title=song_name, artist=artist_name, album=album)
             .first()
         )
         if song_query and overwrite:
             session.delete(song_query)
         elif song_query and not overwrite:
             return
-        song = Song(name=song_name, artist=artist_name, video_id=videoId, album=album)
+        song = Song(title=song_name, artist=artist_name, video_id=videoId, album=album)
         session.add(song)
         session.commit()
     except Exception as e:
