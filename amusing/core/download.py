@@ -1,6 +1,8 @@
 import os
 import re
 import subprocess
+import urllib.request
+import shutil
 from glob import glob
 
 from amusing.db.models import Song
@@ -40,36 +42,51 @@ def download_song_from_video_id(video_id: str, path: str):
 def add_metadata(
     input_file: str,
     output_file: str,
-    path: str,
+    album_dir: str,
     song: Song,
 ):
     """Adds metadata to the song file. Requires FFmpeg installed."""
     album = song.album
+    artwork_url = song.artwork_url
+    artwork_path = os.path.join(album_dir, 'artwork.png')
+    custom_artwork = artwork_url is not None
+    if custom_artwork and not os.path.exists(artwork_path):
+        artwork_file = open(artwork_path, 'wb')
+        response = urllib.request.urlopen(artwork_url)
+        shutil.copyfileobj(response, artwork_file)
+
+    args = [
+        'ffmpeg',
+        '-y',
+        '-i', input_file,
+        '-metadata', f"title={song.title}",
+        '-metadata', f"album={album.title}",
+        '-metadata', f"artist={song.artist}",
+        '-metadata', f"composer={song.composer}",
+        '-metadata', f"genre={song.genre}",
+        '-metadata', f"track={song.track}/{album.tracks}",
+        '-metadata', f"album_artist={album.artist}",
+        '-metadata', f"date={album.release_date}",
+        '-acodec', 'copy',
+        '-vcodec', 'png',
+        '-disposition:v', 'attached_pic',
+        '-vf', "crop=w='min(iw\,ih)':h='min(iw\,ih)',scale=600:600,setsar=1",
+        output_file,
+    ]
+
+    if custom_artwork:
+        # Add artwork input to arguments
+        args.insert(4, '-i')
+        args.insert(5, artwork_path)
+
     result = subprocess.run(
-        [
-            'ffmpeg',
-            '-y',
-            '-i', input_file,
-            '-metadata', f"title={song.title}",
-            '-metadata', f"album={album.title}",
-            '-metadata', f"artist={song.artist}",
-            '-metadata', f"composer={song.composer}",
-            '-metadata', f"genre={song.genre}",
-            '-metadata', f"track={song.track}/{album.tracks}",
-            '-metadata', f"album_artist={album.artist}",
-            '-metadata', f"date={album.release_date}",
-            '-acodec', 'copy',
-            '-vcodec', 'png',
-            '-disposition:v', 'attached_pic',
-            '-vf', "crop=w='min(iw\,ih)':h='min(iw\,ih)',scale=600:600,setsar=1",
-            output_file,
-        ],
+        args,
         capture_output=True,
         text=True,
     )
     rc = result.returncode
     if rc:
-        print(result.output)
+        print(result.stderr)
         print(f"[!] FFmpeg exited with error code {rc}")
 
 
