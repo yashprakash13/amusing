@@ -39,7 +39,8 @@ def process_album(group: pd.DataFrame, album: Album, session: Session) -> pd.Dat
             continue
         elif song:
             # Skip song already in DB and set CSV video_id
-            group.loc[index, 'Video ID'] = song.video_id
+            video_id = song.video_id
+            group.loc[index, 'Video ID'] = video_id
             print(f"[=] video_id: [{video_id}] -> '{song_title} - {album_title} - {artist}'")
             continue
 
