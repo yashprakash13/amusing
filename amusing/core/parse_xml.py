@@ -60,7 +60,13 @@ def parse_library_xml(root_download_path: str, lib_path: str):
             return df
 
         df_apple_music = df_creation(apple_music, list(apple_music_cols))
-        df_apple_music['Video ID'] = pd.Series(dtype='str')
+
+        # Move title column at the beginning
+        title_column = df_apple_music.pop('Name')
+        df_apple_music.insert(0, 'Title', title_column)
+        # Add video_id column
+        df_apple_music.insert(0, 'Video ID', '')
+
         print("Dataframe created of length: ", len(df_apple_music))
         df_apple_music.to_csv(
             os.path.join(root_download_path, "Library.csv"), index=False

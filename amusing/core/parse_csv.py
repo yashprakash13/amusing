@@ -17,7 +17,7 @@ def get_video_id(song: Song) -> str:
 def process_album(group: pd.DataFrame, album: Album, session: Session) -> pd.DataFrame:
     """Helper function to process each album and songs present within it from the csv."""
     for index, row in group.iterrows():
-        song_title = row['Name']
+        song_title = row['Title']
         artist = row['Artist']
         album_title = album.title
         genre = row['Genre']
