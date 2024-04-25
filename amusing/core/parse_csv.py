@@ -25,23 +25,34 @@ def process_album(group: pd.DataFrame, album: Album, session: Session) -> pd.Dat
         composer = row['Composer']
         # This could be initially empty
         video_id = row['Video ID']
+        artwork_url = row['Artwork URL']
 
         song = (
             session.query(Song)
             .filter_by(title=song_title, artist=artist, album=album)
             .first()
         )
-        if video_id and song:
-            if video_id != song.video_id:
-                # Update song video_id with new one
+
+        if song:
+            updated = True
+            if video_id != '' and (video_id != song.video_id):
+                # Update song video_id with new one from CSV
                 song.video_id = video_id
-                session.commit()
                 print(f"[+] updated video_id: [{video_id}] -> '{song_title} - {album_title} - {artist}'")
-            continue
-        elif song:
-            # Skip song already in DB and set CSV video_id
-            video_id = song.video_id
-            group.loc[index, 'Video ID'] = video_id
+                updated = True
+            elif not video_id:
+                # Update CSV with id stored in DB
+                video_id = song.video_id
+                group.loc[index, 'Video ID'] = video_id
+            if artwork_url and (artwork_url != song.artwork_url):
+                song.artwork_url = artwork_url
+                updated = True
+            elif not artwork_url:
+                artwork_url = song.artwork_url
+                group.loc[index, 'Artwork URL'] = artwork_url
+            if updated:
+                session.commit()
+
             continue
 
         # Otherwise the song has to be associated with a video_id and put in DB

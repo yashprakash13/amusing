@@ -64,6 +64,8 @@ def parse_library_xml(root_download_path: str, lib_path: str):
         # Move title column at the beginning
         title_column = df_apple_music.pop('Name')
         df_apple_music.insert(0, 'Title', title_column)
+        # Add album artwork column
+        df_apple_music.insert(0, 'Artwork URL', '')
         # Add video_id column
         df_apple_music.insert(0, 'Video ID', '')
 

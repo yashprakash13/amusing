@@ -52,6 +52,7 @@ class Song(Base):
     genre: Mapped[str] = mapped_column(nullable=True)
     track: Mapped[int] = mapped_column(nullable=True)
     video_id: Mapped[str] = mapped_column(nullable=False)
+    artwork_url: Mapped[str] = mapped_column(nullable=True)
     album_id: Mapped[int] = mapped_column(ForeignKey("albums.id"), nullable=False)
     album: Mapped["Album"] = relationship(back_populates="songs")
 
