@@ -16,12 +16,11 @@ def find_or_create_config_file():
     if not os.path.exists(file_path) and os.path.exists(alternative_config_path):
         file_path = alternative_config_path
 
-    os.makedirs(os.path.join(default_root_download_path), exist_ok=True)
-
     # Check if the file exists
     if os.path.exists(file_path):
         return file_path
     else:
+        os.makedirs(os.path.join(default_root_download_path), exist_ok=True)
         # Create the file
         with open(file_path, "w") as file:
             # Write default configuration (you can customize this)
