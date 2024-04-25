@@ -1,27 +1,20 @@
 import pandas as pd
 from sqlalchemy.orm import Session
-from ytmusicapi import YTMusic
 
 from amusing.db.models import Album, Song
+import amusing.core.search
 
-ytmusic = YTMusic()
-
-def get_video_id(song):
+def get_video_id(song: Song) -> str:
+    """Return YouTube video ID of a song, searching it on YouTube Music if necessary."""
     # Check if one was already assigned
     video_id = song.video_id
     if video_id:
         return song.video_id
 
-    search_results = ytmusic.search(
-        f"{song.title} - {song.artist} - {song.album.title}",
-        limit=1,
-        ignore_spelling=True,
-        filter='songs',
-    )
-    return search_results[0]['videoId']
+    return search(song).video_id
 
 
-def process_album(group, album, session):
+def process_album(group: pd.DataFrame, album: Album, session: Session) -> pd.DataFrame:
     """Helper function to process each album and songs present within it from the csv."""
     for index, row in group.iterrows():
         song_title = row['Name']
@@ -38,9 +31,16 @@ def process_album(group, album, session):
             .filter_by(title=song_title, artist=artist, album=album)
             .first()
         )
-        if song:
-            # The song is already in DB
+        if video_id and song:
+            # Update song video_id with new one
+            song.video_id = video_id
+            session.commit()
+            print(f"[+] updated video_id: [{video_id}] -> '{song_title} - {album_title} - {artist}'")
+            continue
+        elif song:
+            # Skip song already in DB and set CSV video_id
             group.loc[index, 'Video ID'] = song.video_id
+            print(f"[=] video_id: [{video_id}] -> '{song_title} - {album_title} - {artist}'")
             continue
 
         # Otherwise the song has to be associated with a video_id and put in DB
@@ -63,7 +63,8 @@ def process_album(group, album, session):
 
             print(f"[+] video_id: [{video_id}] -> '{song_title} - {album_title} - {artist}'")
         except Exception as e:
-            print(f"Error: {e}\nSkipping '{song_title}'.")
+            print(f"[!] Error: {e}")
+            print(f"[-] Skipping song '{song_title} - {album_title} - {artist}'")
             continue
 
     return group

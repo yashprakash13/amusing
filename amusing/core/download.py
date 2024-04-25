@@ -1,6 +1,9 @@
 import os
 import re
 import subprocess
+from glob import glob
+
+from amusing.db.models import Song
 
 import yt_dlp
 
@@ -30,11 +33,12 @@ def download_song_from_video_id(video_id: str, path: str):
         if error_code:
             raise RuntimeError(f"video [{video_id}] download failed with error code: {error_code}")
 
+
 def add_metadata(
-    input_file,
-    output_file,
-    path,
-    song,
+    input_file: str,
+    output_file: str,
+    path: str,
+    song: Song,
 ):
     """Adds metadata to the song file. Requires FFmpeg installed."""
     album = song.album
@@ -63,9 +67,10 @@ def add_metadata(
     rc = result.returncode
     if rc:
         print(result.output)
-        print(f"FFmpeg exited with error code {rc}.")
+        print(f"[!] FFmpeg exited with error code {rc}")
 
-def song_file(song, album_dir):
+
+def song_file(song: Song, album_dir: str) -> str:
     """
     Find downloaded song filename.
 
@@ -86,29 +91,43 @@ def song_file(song, album_dir):
     return ""
 
 
-def download(song, album_dir, songs_dir):
+def download(song: Song, root_download_path: str):
+    """Download a song from YouTube video and generate file with metadata."""
+
     title = song.title.replace('/', u"\u2215")
     album = song.album.title.replace('/', u"\u2215")
     artist = song.artist.replace('/', u"\u2215")
     video_id = song.video_id
 
+    songs_dir = os.path.join(root_download_path, 'songs')
+    album_dir = os.path.join(root_download_path, 'albums', album)
+    # Generate directories
+    for path in [songs_dir, album_dir]:
+        if not (os.path.exists(path) and os.path.isdir(path)):
+            os.makedirs(path, exist_ok=True)
+
     song_name = f"{title} - {album} - {artist}"
-    song_filename = f"{song_name}.m4a"
+    song_filename = f"{song_name} [{video_id}].m4a"
     song_file_path = os.path.join(songs_dir, song_filename)
 
+    # Skip download if the song is already present
     if os.path.exists(song_file_path):
         return
 
+    for file in glob(f"{song_name} [*].m4a"):
+        # Delete existing song if it was generated from a different video
+        os.remove(file)
+
     downloaded_file_path = song_file(song, album_dir)
     if downloaded_file_path:
-        print(f"'{title}' already downloaded in '{downloaded_file_path}'")
+        print(f"[=] Song already downloaded: '{title}' -> '{downloaded_file_path}'")
     else:
-        print(f"Downloading '{song_name}'")
+        print(f"[+] Downloading '{song_name}'")
         download_song_from_video_id(video_id, album_dir)
         downloaded_file_path = song_file(song, album_dir)
-        print(f"Downloaded '{downloaded_file_path}'")
+        print(f"[+] Downloaded '{downloaded_file_path}'")
 
-    print(f"Generating '{song_filename}'")
+    print(f"[+] Generating '{song_filename}'")
     add_metadata(
         downloaded_file_path,
         song_file_path,

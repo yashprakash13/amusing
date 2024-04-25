@@ -6,6 +6,7 @@ from rich.console import Console
 from rich.table import Table
 
 from amusing.cli_operations import (
+    download_song_operation,
     parse_library_operation,
     download_library_operation,
     show_similar_albums_in_db_operation,
