@@ -44,6 +44,9 @@ def download_song_operation(
     except RuntimeError as e:
         print(f"[!] Error: {e}")
         return "Something went wrong in downloading song. Please try again."
+    except FileNotFoundError:
+        print(f"[!] Error: {e}")
+        return "Is FFmpeg installed? It is required to generate the songs."
 
     # insert into db
     session = get_new_db_session(construct_db_path(root_download_path))
@@ -98,6 +101,9 @@ def download_library_operation(root_download_path: str):
             except RuntimeError as e:
                 print(f"[!] Error: {e}")
                 return "Something went wrong in downloading song. Please try again."
+            except FileNotFoundError:
+                print(f"[!] Error: {e}")
+                return "Is FFmpeg installed? It is required to generate the songs."
 
 
 def show_similar_songs_in_db_operation(song_name: str, root_download_path: str):
