@@ -52,8 +52,13 @@ def add_metadata(
     custom_artwork = artwork_url is not None
     if custom_artwork and not os.path.exists(artwork_path):
         artwork_file = open(artwork_path, 'wb')
-        response = urllib.request.urlopen(artwork_url)
-        shutil.copyfileobj(response, artwork_file)
+        try:
+            print(f"[+] Downloading album artwork from: {artwork_url}")
+            response = urllib.request.urlopen(artwork_url)
+            shutil.copyfileobj(response, artwork_file)
+        except Exception as e:
+            os.remove(artwork_path)
+            raise RuntimeError(f"failed to download album artwork at: {artwork_url}")
 
     args = [
         'ffmpeg',

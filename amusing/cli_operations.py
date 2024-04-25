@@ -43,7 +43,7 @@ def download_song_operation(
         download(song_fetched, root_download_path)
     except RuntimeError as e:
         print(f"[!] Error: {e}")
-        return "Something went wrong in downloading song. Please try again."
+        return "Something went wrong while downloading a song. Please try again."
     except FileNotFoundError as e:
         print(f"[!] Error: {e}")
         return "Is FFmpeg installed? It is required to generate the songs."
@@ -103,10 +103,10 @@ def download_library_operation(root_download_path: str) -> str:
                 download(song, root_download_path)
             except RuntimeError as e:
                 print(f"[!] Error: {e}")
-                return "Something went wrong in downloading song. Please try again."
+                print('[!] Something went wrong while downloading. Skipping song.')
             except FileNotFoundError as e:
                 print(f"[!] Error: {e}")
-                return "Is FFmpeg installed? It is required to generate the songs."
+                return 'Is FFmpeg installed? It is required to generate the songs.'
 
     return ""
 
