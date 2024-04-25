@@ -15,7 +15,7 @@ def download_song_operation(
     artist_name: str,
     root_download_path: str,
     overwrite: bool = False,
-):
+) -> str:
     """Download a particular song and add it to the db.
 
     Parameters:
@@ -61,10 +61,11 @@ def download_song_operation(
     )
     if error:
         return "Something went wrong in creating song. Please try again."
+
     return "Added song!"
 
 
-def parse_library_operation(root_download_path: str, lib_path: str):
+def parse_library_operation(root_download_path: str, lib_path: str) -> str:
     """Parse the Library XML or CSV file.
 
     Parameters:
@@ -84,8 +85,10 @@ def parse_library_operation(root_download_path: str, lib_path: str):
     session = get_new_db_session(construct_db_path(root_download_path))
     process_csv(parsed_library, session)
 
+    return ""
 
-def download_library_operation(root_download_path: str):
+
+def download_library_operation(root_download_path: str) -> str:
     """Download all songs in DB.
 
     Parameters:
@@ -104,6 +107,8 @@ def download_library_operation(root_download_path: str):
             except FileNotFoundError as e:
                 print(f"[!] Error: {e}")
                 return "Is FFmpeg installed? It is required to generate the songs."
+
+    return ""
 
 
 def show_similar_songs_in_db_operation(song_name: str, root_download_path: str):

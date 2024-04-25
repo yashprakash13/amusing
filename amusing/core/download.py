@@ -29,9 +29,12 @@ def download_song_from_video_id(video_id: str, path: str):
         "writethumbnail": True,
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        error_code = ydl.download(song_url)
-        if error_code:
-            raise RuntimeError(f"video [{video_id}] download failed with error code: {error_code}")
+        try:
+            error_code = ydl.download(song_url)
+            if error_code:
+                raise RuntimeError(f"video [{video_id}] download failed with error code: {error_code}")
+        except Exception:
+            raise RuntimeError(f"video [{video_id}] download failed")
 
 
 def add_metadata(

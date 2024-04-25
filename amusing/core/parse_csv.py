@@ -32,10 +32,11 @@ def process_album(group: pd.DataFrame, album: Album, session: Session) -> pd.Dat
             .first()
         )
         if video_id and song:
-            # Update song video_id with new one
-            song.video_id = video_id
-            session.commit()
-            print(f"[+] updated video_id: [{video_id}] -> '{song_title} - {album_title} - {artist}'")
+            if video_id != song.video_id:
+                # Update song video_id with new one
+                song.video_id = video_id
+                session.commit()
+                print(f"[+] updated video_id: [{video_id}] -> '{song_title} - {album_title} - {artist}'")
             continue
         elif song:
             # Skip song already in DB and set CSV video_id
