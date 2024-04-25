@@ -60,7 +60,8 @@ def parse_library(
     ]
 ):
     """Parse the entire Apple Music library and make/update the DB as needed."""
-    parse_library_operation(APP_CONFIG['root_download_path'], library_path)
+    out = parse_library_operation(APP_CONFIG['root_download_path'], library_path)
+    print(out)
 
 
 @app.command('download')
@@ -77,7 +78,8 @@ def download_library(
     if library_path:
         parse_library_operation(APP_CONFIG['root_download_path'], library_path)
 
-    download_library_operation(APP_CONFIG['root_download_path'])
+    out = download_library_operation(APP_CONFIG['root_download_path'])
+    print(out)
 
 
 @app.command("showsimilar")
