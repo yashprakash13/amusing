@@ -1,8 +1,8 @@
-<h1> 🎧 Amusing 🎸 </h1>
+# 🎧 Amusing 🎸
 
-A CLI to help download music independently or from your exported apple music library.
+A CLI to download music independently and from your exported Apple Music library.
 
-## Why should you use <strong>Amusing</strong>?
+## Why should you use **Amusing**?
 
 - To download your entire Apple Music Library and store it locally in one go
 - To search and download individual songs from YouTube
