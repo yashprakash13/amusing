@@ -16,7 +16,7 @@ from amusing.cli_operations import (
 from amusing.utils.config import APP_CONFIG
 
 app = typer.Typer(
-    help="Amusing CLI to help download music independently or from your exported apple music library.",
+    help="CLI to download music independently and from your exported Apple Music library.",
     add_completion=False,
 )
 __version__ = metadata.version("amusing-app")
@@ -42,7 +42,7 @@ def download_song(
     album: Annotated[str, typer.Argument(help="Album the song belongs to.")],
     force: Annotated[bool, typer.Option(help="Overwrite the song if present.")] = False,
 ):
-    """Search and download the song and add it to the db. Use --force to overwrite the existing song in the db.
+    """Search and download the song and add it to the db.
     Creates a new album if not already present.
     """
     print(f"Given: {name} from {album} by {artist} and force is {force}")
@@ -69,7 +69,7 @@ def parse_library(
 def download_library(
     library_path: Annotated[
         str,
-        typer.Argument(help="[Optional] The path to the 'Library.xml' or 'Library.csv' exported from Apple Music."),
+        typer.Argument(help="The path to the 'Library.xml' or 'Library.csv' exported from Apple Music."),
     ] = ""
 ):
     """Download the entire DB library.
