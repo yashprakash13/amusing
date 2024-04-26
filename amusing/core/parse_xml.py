@@ -65,9 +65,9 @@ def parse_library_xml(root_download_path: str, lib_path: str):
         title_column = df_apple_music.pop('Name')
         df_apple_music.insert(0, 'Title', title_column)
         # Add album artwork column
-        df_apple_music.insert(0, 'Artwork URL', '')
+        df_apple_music.insert(2, 'Artwork URL', '')
         # Add video_id column
-        df_apple_music.insert(0, 'Video ID', '')
+        df_apple_music.insert(2, 'Video ID', '')
 
         print("Dataframe created of length: ", len(df_apple_music))
         df_apple_music.to_csv(
