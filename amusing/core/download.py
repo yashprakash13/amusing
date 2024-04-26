@@ -125,7 +125,7 @@ def download(song: Song, root_download_path: str):
     video_id = song.video_id
 
     songs_dir = os.path.join(root_download_path, 'songs')
-    album_dir = os.path.join(root_download_path, 'albums', album)
+    album_dir = os.path.join(root_download_path, 'caches', album)
     # Generate directories
     for path in [songs_dir, album_dir]:
         if not (os.path.exists(path) and os.path.isdir(path)):
