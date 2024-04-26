@@ -217,8 +217,8 @@ You can manually modify it to change which YouTube video to download for a speci
 You can also add a custom URL to download a specific album artwork.
 
 Here are some great tools you can use to find album artworks:
-- [https://bendodson.com/projects/itunes-artwork-finder/](Ben Dodson's iTunes Artwork Finder)
-- [https://bendodson.com/projects/apple-music-artwork-finder](Ben Dodson's Apple Music Artwork Finder)
+- [Ben Dodson's iTunes Artwork Finder](https://bendodson.com/projects/itunes-artwork-finder/)
+- [Ben Dodson's Apple Music Artwork Finder](https://bendodson.com/projects/apple-music-artwork-finder)
 
 Copy the image link into your CSV file and Amusing will download it and embed it into your song!
 
