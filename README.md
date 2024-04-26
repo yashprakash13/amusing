@@ -12,7 +12,7 @@ A CLI to help download music independently or from your exported apple music lib
 
 Install it as a [PyPI](https://pypi.org/) package:
 
-```console
+```
 pip install amusing-app
 ```
 
