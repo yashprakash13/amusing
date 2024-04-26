@@ -8,7 +8,7 @@ A CLI to help download music independently or from your exported apple music lib
 - To search and download individual songs from YouTube
 - To keep track of your ever growing music collection
 
-## 🛠️ Install it!
+## 📦 Install it!
 
 Install it as a [PyPI](https://pypi.org/) package:
 
@@ -207,6 +207,14 @@ Album to look up:  Human
 ```
 
 </details>
+
+
+## 🛠️ Library customization
+
+The resulting `Library.csv` file will be automatically updated by Amusing at every DB change.
+
+You can manually modify it to change which YouTube video to download for a specific song.
+You can also add a custom URL to download a specific album artwork.
 
 
 ## 📝 TODO
