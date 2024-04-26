@@ -1,33 +1,29 @@
 from ytmusicapi import YTMusic
 
+from amusing.db.models import Song
 
-def search_a_song(name: str, artist: str, album: str) -> dict:
-    """Search a song and return the first result from YouTube Music."""
+def search(song: Song) -> Song:
+    """Search song on YouTube Music and return the first result."""
     ytmusic = YTMusic()
-    if album == "None":
-        album = ""
     search_results = ytmusic.search(
-        f"{name} - {artist} - {album}", limit=1, ignore_spelling=True, filter="songs"
+        f"{song.title} - {song.artist} - {song.album.title}",
+        limit=1,
+        ignore_spelling=True,
+        filter="songs"
     )
-    if len(search_results):
-        search_results = search_results[0]
-        try:
-            artist_name, album_name, title = artist, album, name
-            title = search_results["title"]
-            if "artists" in search_results:
-                artist_name = ", ".join(
-                    artist["name"] for artist in search_results["artists"]
-                )
-            videoId = search_results["videoId"]
-            if "album" in search_results:
-                album_name = search_results["album"]["name"]
-            return {
-                "videoId": videoId,
-                "album": album_name,
-                "song_name": title,
-                "artist_name": artist_name,
-            }
-        except Exception as e:
-            print(f"Exception occured in searching... {e}")
-    else:
-        return {}
+
+    if not len(search_results):
+        raise RuntimeError(f"song not found on YouTube Music: '{song.title} - {song.album} - {song.artist}'")
+
+    search_results = search_results[0]
+    result = song.clone()
+    result.title = search_results["title"]
+    if "artists" in search_results:
+        result.artist = ", ".join(
+            artist["name"] for artist in search_results["artists"]
+        )
+    result.video_id = search_results["videoId"]
+    if "album" in search_results:
+        result.album.title = search_results["album"]["name"]
+
+    return result

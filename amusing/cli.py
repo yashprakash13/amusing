@@ -8,6 +8,7 @@ from rich.table import Table
 from amusing.cli_operations import (
     download_song_operation,
     parse_library_operation,
+    download_library_operation,
     show_similar_albums_in_db_operation,
     show_similar_songs_for_artist_in_db_operation,
     show_similar_songs_in_db_operation,
@@ -15,7 +16,7 @@ from amusing.cli_operations import (
 from amusing.utils.config import APP_CONFIG
 
 app = typer.Typer(
-    help="Amusing CLI to help download music independently or from your exported apple music library.",
+    help="CLI to download music independently and from your exported Apple Music library.",
     add_completion=False,
 )
 __version__ = metadata.version("amusing-app")
@@ -41,7 +42,7 @@ def download_song(
     album: Annotated[str, typer.Argument(help="Album the song belongs to.")],
     force: Annotated[bool, typer.Option(help="Overwrite the song if present.")] = False,
 ):
-    """Search and download the song and add it to the db. Use --force to overwrite the existing song in the db.
+    """Search and download the song and add it to the db.
     Creates a new album if not already present.
     """
     print(f"Given: {name} from {album} by {artist} and force is {force}")
@@ -51,16 +52,36 @@ def download_song(
     print(output)
 
 
-@app.command("download")
+@app.command("parse")
 def parse_library(
-    path: Annotated[
+    library_path: Annotated[
         str,
-        typer.Argument(help="The path to the Library.xml exported from Apple Music."),
-    ] = "./Library.xml"
+        typer.Argument(help="The path to the 'Library.xml' or 'Library.csv' exported from Apple Music."),
+    ]
 ):
-    """Parse the entire AM library and download songs and make/update the db as needed."""
-    print(f"Gotten path: {path}")
-    parse_library_operation(APP_CONFIG["root_download_path"], path)
+    """Parse the entire Apple Music library and make/update the DB as needed."""
+    output = parse_library_operation(APP_CONFIG['root_download_path'], library_path)
+    if output:
+        print(output)
+
+
+@app.command('download')
+def download_library(
+    library_path: Annotated[
+        str,
+        typer.Argument(help="The path to the 'Library.xml' or 'Library.csv' exported from Apple Music."),
+    ] = ""
+):
+    """Download the entire DB library.
+
+    If passed, parse the library and update the DB before download.
+    """
+    if library_path:
+        parse_library_operation(APP_CONFIG['root_download_path'], library_path)
+
+    output = download_library_operation(APP_CONFIG['root_download_path'])
+    if output:
+        print(output)
 
 
 @app.command("showsimilar")

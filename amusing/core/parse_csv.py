@@ -1,152 +1,113 @@
-import os
-import re
-import time
-
 import pandas as pd
-import yt_dlp
 from sqlalchemy.orm import Session
-from ytmusicapi import YTMusic
 
 from amusing.db.models import Album, Song
+from amusing.core.search import search
 
-ytmusic = YTMusic()
+def get_video_id(song: Song) -> str:
+    """Return YouTube video ID of a song, searching it on YouTube Music if necessary."""
+    # Check if one was already assigned
+    video_id = song.video_id
+    if video_id:
+        return song.video_id
+
+    return search(song).video_id
 
 
-def extract_song_info(song_file):
-    match = re.match(r"^(.*?) \[(.*?)\]$", song_file)
-    if match:
-        return match.group(1), match.group(2)
-    else:
-        return song_file, ""
-
-
-def process_groups(
-    album_name, album_dir, group, session, album=None, dir_already_present=False
-):
+def process_album(group: pd.DataFrame, album: Album, session: Session) -> pd.DataFrame:
     """Helper function to process each album and songs present within it from the csv."""
-    print(f"Processing album: {album_name}")
-    files_in_album = os.listdir(album_dir)
     for index, row in group.iterrows():
-        song_name = row["Name"]
-        artist_name = row["Artist"]
+        song_title = row['Title']
+        artist = row['Artist']
+        album_title = album.title
+        genre = row['Genre']
+        track = row['Track Number']
+        composer = row['Composer']
+        # This could be initially empty
+        video_id = row['Video ID']
+        artwork_url = row['Artwork URL']
 
-        if dir_already_present:
-            song_already_present = False
-            for file_name in files_in_album:
-                if (
-                    song_name.lower() in file_name.lower()
-                    or file_name.lower() in song_name.lower()
-                ):
-                    song_already_present = True
-                    print("Song downloaded already. Skipping.")
-                    # check if song also present in db, if not add to db
-                    song_query = (
-                        session.query(Song)
-                        .filter_by(name=song_name, artist=artist_name, album=album)
-                        .first()
-                    )
-                    if not song_query:
-                        print("Song not in db. Adding.")
-                        _, song_id = extract_song_info(file_name)
-                        song = Song(
-                            name=song_name,
-                            artist=artist_name,
-                            video_id=song_id,
-                            album=album,
-                        )
-                        session.add(song)
-                        session.commit()
-                        print("Song added to db.")
-                    break
-            if song_already_present:
-                continue
+        song = (
+            session.query(Song)
+            .filter_by(title=song_title, artist=artist, album=album)
+            .first()
+        )
 
-        # Perform operations on the row
-        print(
-            f"Processing song: Album='{album_name}', Song='{song_name}', Artist='{artist_name}'"
+        if song:
+            updated = True
+            if video_id != '' and (video_id != song.video_id):
+                # Update song video_id with new one from CSV
+                song.video_id = video_id
+                print(f"[+] updated video_id: [{video_id}] -> '{song_title} - {album_title} - {artist}'")
+                updated = True
+            elif not video_id:
+                # Update CSV with id stored in DB
+                video_id = song.video_id
+                group.loc[index, 'Video ID'] = video_id
+            if artwork_url and (artwork_url != song.artwork_url):
+                song.artwork_url = artwork_url
+                updated = True
+            elif not artwork_url:
+                artwork_url = song.artwork_url
+                group.loc[index, 'Artwork URL'] = artwork_url
+            if updated:
+                session.commit()
+
+            continue
+
+        # Otherwise the song has to be associated with a video_id and put in DB
+        song = Song(
+            title=song_title,
+            artist=artist,
+            album=album,
+            genre=genre,
+            track=track,
+            composer=composer,
+            video_id=video_id,
         )
         try:
-            search_results = ytmusic.search(
-                f"{song_name} - {artist_name} - {album_name}",
-                limit=1,
-                ignore_spelling=True,
-                filter="songs",
-            )
-            videoId = search_results[0]["videoId"]
-            song_url = f"https://www.youtube.com/watch?v={videoId}"
-            ydl_opts = {
-                "format": "m4a/bestaudio/best",
-                # ℹ️ See help(yt_dlp.postprocessor) for a list of available Postprocessors and their arguments
-                "postprocessors": [
-                    {  # Extract audio using ffmpeg
-                        "key": "FFmpegExtractAudio",
-                        "preferredcodec": "m4a",
-                    }
-                ],
-                "paths": {"home": album_dir},
-                "outtmpl": {"pl_thumbnail": ""},
-                "postprocessors": [
-                    {"already_have_thumbnail": False, "key": "EmbedThumbnail"}
-                ],
-                "writethumbnail": True,
-            }
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                error_code = ydl.download(song_url)
-                print("Error=> ", error_code)
+            video_id = get_video_id(song)
+            group.loc[index, 'Video ID'] = video_id
 
-            # check if song present in db, if yes, remove and add this one.
-            song_query = (
-                session.query(Song)
-                .filter_by(name=song_name, artist=artist_name, album=album)
-                .first()
-            )
-            if song_query:
-                session.delete(song_query)
-            song = Song(
-                name=song_name, artist=artist_name, video_id=videoId, album=album
-            )
+            song.video_id = video_id
             session.add(song)
             session.commit()
-            print(
-                f"Done song: Album='{album_name}', Song='{song_name}', Artist='{artist_name}'"
-            )
-            time.sleep(1)
+
+            print(f"[+] video_id: [{video_id}] -> '{song_title} - {album_title} - {artist}'")
         except Exception as e:
-            print(f"Exception {e}. Skipping song.")
+            print(f"[!] Error: {e}")
+            print(f"[-] Skipping song '{song_title} - {album_title} - {artist}'")
             continue
-    print(f"Done album '{album_name}'")
-    time.sleep(5)
+
+    return group
 
 
-def process_csv(filename: str, download_path: str, session: Session):
-    """Function to read CSV, process rows, and sleep accordingly."""
-    df = pd.read_csv(filename)
-    grouped = df.groupby("Album")
+def process_csv(filename: str, session: Session):
+    """Function to read CSV and process rows"""
+    df = pd.read_csv(filename).fillna('')
+    grouped = df.groupby('Album')
 
-    sleep_after_5th = 5
-    sleep_after_10th = 11
-
-    for album_name, group in grouped:
-        album_dir = os.path.join(download_path, album_name)
-        dir_already_present = False
-        if os.path.exists(album_dir) and os.path.isdir(album_dir):
-            dir_already_present = True
-        else:
-            os.makedirs(album_dir, exist_ok=True)
-
-        album = session.query(Album).filter_by(name=album_name).first()
+    for album_title, group in grouped:
+        album = (
+            session.query(Album)
+            .filter_by(title=album_title)
+            .first()
+        )
         if not album:
-            album = Album(name=album_name)
+            row = group.iloc[0]
+            album = Album(title=album_title)
+            album.tracks = row['Track Count']
+            album.artist = row['Album Artist']
+            album.release_date = row['Release Date']
+
             session.add(album)
             session.commit()
 
-        # Submit the group processing task to the ThreadPoolExecutor
-        process_groups(album_name, album_dir, group, album, dir_already_present)
+        group = process_album(group, album, session)
 
-        # Sleep after every 5th group
-        if len(group) >= 5:
-            time.sleep(sleep_after_5th)
+        # Update original DataFrame too
+        for index, row in group.iterrows():
+            df.at[index, 'Video ID'] = row['Video ID']
 
-        # Sleep after every 10th group
-        if len(group) >= 10:
-            time.sleep(sleep_after_10th)
+    # Finally, export the updated CSV, with video ids
+    df.to_csv(filename, index=False)

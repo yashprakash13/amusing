@@ -5,29 +5,67 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
-    pass
+    def clone(self):
+        d = dict(self.__dict__)
+        if 'id' in d:
+            # Get rid of id
+            d.pop('id')
+        # Get rid of SQLAlchemy special attr
+        d.pop('_sa_instance_state')
+        copy = self.__class__(**d)
+        return copy
 
 
 class Album(Base):
     __tablename__ = "albums"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(nullable=False)
+    title: Mapped[str] = mapped_column(nullable=False)
+    tracks: Mapped[int] = mapped_column(nullable=True)
+    artist: Mapped[str] = mapped_column(nullable=True)
+    release_date: Mapped[str] = mapped_column(nullable=True)
     songs: Mapped[List["Song"]] = relationship(back_populates="album")
 
     def __repr__(self) -> str:
-        return f"<Album= {self.name}>"
+        return f"<Album= {self.title}>"
+
+    def clone(self):
+        d = dict(self.__dict__)
+        if 'id' in d:
+            # Get rid of id
+            d.pop('id')
+        # Get rid of SQLAlchemy special attr
+        d.pop('_sa_instance_state')
+        if 'songs' in d:
+            d.pop('songs')
+        copy = self.__class__(**d)
+        return copy
 
 
 class Song(Base):
     __tablename__ = "songs"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[int] = mapped_column(nullable=False)
-    artist: Mapped[str]
-    video_id: Mapped[str]
+    title: Mapped[str] = mapped_column(nullable=False)
+    artist: Mapped[str] = mapped_column(nullable=False)
+    composer: Mapped[str] = mapped_column(nullable=True)
+    genre: Mapped[str] = mapped_column(nullable=True)
+    track: Mapped[int] = mapped_column(nullable=True)
+    video_id: Mapped[str] = mapped_column(nullable=False)
+    artwork_url: Mapped[str] = mapped_column(nullable=True)
     album_id: Mapped[int] = mapped_column(ForeignKey("albums.id"), nullable=False)
     album: Mapped["Album"] = relationship(back_populates="songs")
 
     def __repr__(self):
-        return f"<Song= {self.name} by {self.artist}>"
+        return f"<Song= {self.title} by {self.artist}>"
+
+    def clone(self):
+        d = dict(self.__dict__)
+        if 'id' in d:
+            # Get rid of id
+            d.pop('id')
+        # Get rid of SQLAlchemy special attr
+        d.pop('_sa_instance_state')
+        d['album'] = self.album.clone()
+        copy = self.__class__(**d)
+        return copy

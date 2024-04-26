@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "amusing-app"
-version = "0.1.2"
-description = "Amusing CLI to help download music independently or from your exported apple music library."
+version = "0.2.0"
+description = "CLI to download music independently and from your exported Apple Music library."
 authors = ["Yash Prakash <yashprakash13@gmail.com>"]
 readme = "README.md"
 packages = [{include = "amusing"}]
@@ -36,7 +36,7 @@ typing-extensions = "4.9.0"
 tzdata = "2023.3"
 urllib3 = "2.1.0"
 websockets = "12.0"
-yt-dlp = "2023.11.16"
+yt-dlp = "2024.4.9"
 ytmusicapi = "1.3.2"
 
 
