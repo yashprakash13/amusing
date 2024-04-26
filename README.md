@@ -220,7 +220,7 @@ Here are some great tools you can use to find album artworks:
 - [Ben Dodson's iTunes Artwork Finder](https://bendodson.com/projects/itunes-artwork-finder/)
 - [Ben Dodson's Apple Music Artwork Finder](https://bendodson.com/projects/apple-music-artwork-finder)
 
-Copy the image link into your CSV file and Amusing will download it and embed it into your song!
+Copy the image link into your CSV file and Amusing will download it and embed it into your song the next time you run `amusing download '/path/to/Library.csv'`!
 
 
 ## 📝 TODO
