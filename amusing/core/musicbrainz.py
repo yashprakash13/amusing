@@ -151,19 +151,33 @@ class MusicBrainzFetcher:
                 print("could not scrub {0}: {1}", path, exc)
 
     def get_true_album_name(self, album_json_data: dict) -> str:
-        """Used to get album name with or without disambiguation from given album details from MB."""
+        """Used to get album name with or without disambiguation from given album details dict from MB."""
         try:
             return f"{album_json_data['title']} ({album_json_data['disambiguation']})"
         except:
             return album_json_data["title"]
 
     def get_true_song_name(self, song_json_data: dict) -> str:
-        """Used to get song name without illegal filename characters from given song details from MB."""
+        """Used to get song name without illegal filename characters from given song details dict from MB."""
         # Define the pattern for illegal characters
         illegal_chars = r'[<>:"/\\|?*\x00-\x1F\x7F]'
         # Replace the illegal characters with an underscore
         cleaned_filename = re.sub(illegal_chars, "-", song_json_data["title"])
         return cleaned_filename
+
+    def get_true_album_artist_credit_name(self, album_json_data: dict) -> str:
+        """Used to get album artist credit phrase from given album details dict from MB."""
+        try:
+            return f"{album_json_data['artist-credit-phrase']})"
+        except:
+            return ""
+
+    def get_true_album_date(self, album_json_data: dict) -> str:
+        """Used to get album date from given album details dict from MB."""
+        try:
+            return f"{album_json_data['date']})"
+        except:
+            return ""
 
     def perform_metadata_addition_to_mediafile(
         self, audio_file_path_dest: str, metadata_dict: dict

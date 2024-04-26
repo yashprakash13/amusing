@@ -157,7 +157,7 @@ def fetch_metadata_all(
         if album_returned_from_db:
             album_json_data = mb.get_release_by_id(album_returned_from_db.album_mbid)
             typer.echo(
-                f"Album fetched from db: \nName: {mb.get_true_album_name(album_json_data)}\nArtists: {album_json_data['artist-credit-phrase']}\nDate: {album_json_data['date']}\nTrack count: {album_json_data['medium-list'][0]['track-count']}"
+                f"Album fetched from db: \nName: {mb.get_true_album_name(album_json_data)}\nArtists: {mb.get_true_album_artist_credit_name(album_json_data)}\nDate: {mb.get_true_album_date(album_json_data)}\nTrack count: {album_json_data['medium-list'][0]['track-count']}"
             )
             fetch_and_save_metadata(
                 album,
