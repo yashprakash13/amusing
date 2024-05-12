@@ -4,6 +4,7 @@ import subprocess
 import urllib.request
 import shutil
 from glob import glob
+import hashlib
 
 from amusing.db.models import Song
 
@@ -47,9 +48,12 @@ def add_metadata(
 ):
     """Adds metadata to the song file. Requires FFmpeg installed."""
     album = song.album
-    artwork_url = song.artwork_url
-    artwork_path = os.path.join(album_dir, 'artwork.png')
-    custom_artwork = artwork_url is not None
+    artwork_url = album.artwork_url
+    if artwork_url is None:
+        artwork_url = ''
+    artwork_hash = hashlib.md5(artwork_url.encode()).hexdigest()
+    artwork_path = os.path.join(album_dir, f"artwork [{artwork_hash}].png")
+    custom_artwork = artwork_url != ''
     if custom_artwork and not os.path.exists(artwork_path):
         artwork_file = open(artwork_path, 'wb')
         try:
@@ -69,6 +73,7 @@ def add_metadata(
         '-metadata', f"artist={song.artist}",
         '-metadata', f"composer={song.composer}",
         '-metadata', f"genre={song.genre}",
+        '-metadata', f"disc={song.disc}",
         '-metadata', f"track={song.track}/{album.tracks}",
         '-metadata', f"album_artist={album.artist}",
         '-metadata', f"date={album.release_date}",
@@ -132,15 +137,22 @@ def download(song: Song, root_download_path: str):
             os.makedirs(path, exist_ok=True)
 
     song_name = f"{title} - {album} - {artist}"
-    song_filename = f"{song_name} [{video_id}].m4a"
+    artwork_url = song.album.artwork_url
+    if artwork_url is None:
+        artwork_url = ''
+    artwork_hash = hashlib.md5(artwork_url.encode()).hexdigest()
+    song_filename = f"{song_name} [{artwork_hash}] [{video_id}].m4a"
     song_file_path = os.path.join(songs_dir, song_filename)
 
     # Skip download if the song is already present
     if os.path.exists(song_file_path):
         return
 
-    for file in glob(f"{song_name} [*].m4a"):
-        # Delete existing song if it was generated from a different video
+    # Escape glob characters
+    escaped_song_name = song_name.replace('[', '[[]').replace('*', '[*]').replace('?', '[?]')
+    # Find all previously generated songs from a different video or with a different artwork
+    for file in glob(f"{escaped_song_name} [[]*] [[]*].m4a"):
+        # Delete previous version of the song, keep only current one
         os.remove(file)
 
     downloaded_file_path = song_file(song, album_dir)
