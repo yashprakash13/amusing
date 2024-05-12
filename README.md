@@ -74,7 +74,7 @@ $ amusing --help
 
 <details>
 
-<summary><h3>Parse an exported `Library.xml` file from your Apple Music account</h3></summary>
+<summary><h3>Parse an exported <code>Library.xml</code> file from your Apple Music account</h3></summary>
 
 You can also use a previously parsed `Library.csv`, that already contains mappings with YouTube video IDs and possible URLs to download custom album artworks.
 
