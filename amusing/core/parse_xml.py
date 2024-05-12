@@ -1,7 +1,24 @@
 import os
+import re
 import xml.etree.ElementTree as ET
+from unidecode import unidecode
 
 import pandas as pd
+
+
+def sort_library(library: pd.DataFrame) -> pd.DataFrame:
+    library = library.sort_values(
+        ['Disc Number', 'Track Number'],
+    )
+    return library.sort_values(
+        ['Sort Album Artist', 'Sort Album'],
+        key=lambda col: col.str.lower().map(lambda it: (
+            # Force numbers to be sorted last
+            lambda decoded: '~' + decoded
+                if re.match(r'\A[0-9]', decoded)
+                else decoded
+        )(unidecode(it)))
+    )
 
 
 def parse_library_xml(root_download_path: str, lib_path: str):
@@ -44,15 +61,19 @@ def parse_library_xml(root_download_path: str, lib_path: str):
         podcast_cols = cols(podcast)
         purchased_cols = cols(purchased)
         apple_music_cols = cols(apple_music)
-        # print(apple_music_cols)
 
         def df_creation(kind, cols):
             df = pd.DataFrame(columns=cols)
-            dict1 = {}
             for i in range(len(kind)):
+                dict1 = {}
                 for j in range(len(kind[i])):
                     if kind[i][j].tag == "key":
-                        dict1[kind[i][j].text] = kind[i][j + 1].text
+                        if kind[i][j + 1].tag == 'true':
+                            dict1[kind[i][j].text] = True
+                        elif kind[i][j + 1].tag == 'false':
+                            dict1[kind[i][j].text] = False
+                        else:
+                            dict1[kind[i][j].text] = kind[i][j + 1].text
                 list_values = [i for i in dict1.values()]
                 list_keys = [j for j in dict1.keys()]
                 df_temp = pd.DataFrame([list_values], columns=list_keys)
@@ -61,15 +82,36 @@ def parse_library_xml(root_download_path: str, lib_path: str):
 
         df_apple_music = df_creation(apple_music, list(apple_music_cols))
 
+        # Fill empty boolean fields
+        df_apple_music = df_apple_music.fillna({
+            'Apple Music': False,
+            'Compilation': False,
+            'Explicit': False,
+            'Favorited': False,
+            'Loved': False,
+            'Part Of Gapless Album': False,
+            'Playlist Only': False,
+        })
+
+        # Fill empty sorting fields
+        df_apple_music = df_apple_music.fillna('')
+        for i in range(len(df_apple_music)):
+            if not df_apple_music.loc[i, 'Sort Album Artist']:
+                df_apple_music.loc[i, 'Sort Album Artist'] = df_apple_music.loc[i, 'Album Artist']
+            if not df_apple_music.loc[i, 'Sort Composer']:
+                df_apple_music.loc[i, 'Sort Composer'] = df_apple_music.loc[i, 'Composer']
+
         # Move title column at the beginning
         title_column = df_apple_music.pop('Name')
         df_apple_music.insert(0, 'Title', title_column)
         # Add album artwork column
-        df_apple_music.insert(2, 'Artwork URL', '')
-        # Add video_id column
-        df_apple_music.insert(2, 'Video ID', '')
+        df_apple_music.insert(3, 'Artwork URL', '')
+        # Add video id column
+        df_apple_music.insert(3, 'Video ID', '')
 
         print("Dataframe created of length: ", len(df_apple_music))
+
+        df_apple_music = sort_library(df_apple_music)
         df_apple_music.to_csv(
             os.path.join(root_download_path, "Library.csv"), index=False
         )

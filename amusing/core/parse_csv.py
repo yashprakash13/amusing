@@ -1,8 +1,10 @@
 import pandas as pd
 from sqlalchemy.orm import Session
+from unidecode import unidecode
 
 from amusing.db.models import Album, Song
 from amusing.core.search import search
+from amusing.core.parse_xml import sort_library
 
 def get_video_id(song: Song) -> str:
     """Return YouTube video ID of a song, searching it on YouTube Music if necessary."""
@@ -116,6 +118,8 @@ def process_csv(filename: str, session: Session):
         for index, row in group.iterrows():
             df.at[index, 'Video ID'] = row['Video ID']
             df.at[index, 'Artwork URL'] = row['Artwork URL']
+
+    df = sort_library(df)
 
     # Finally, export the updated CSV, with video ids
     df.to_csv(filename, index=False)
