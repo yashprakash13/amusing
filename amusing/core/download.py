@@ -121,27 +121,39 @@ def song_file(song: Song, album_dir: str) -> str:
     return ""
 
 
+# Escape file system special characters with unicode variants
+def escape(name: str) -> str:
+    return (
+        name.replace('<', '＜')
+            .replace('>', '＞')
+            .replace(':', '：')
+            .replace('"', 'ʺ')
+            .replace('/', '∕')
+            .replace('\\', '∖')
+            .replace('|', '｜')
+            .replace('?', '？')
+            .replace('*', '﹡')
+    )
+
+
 def download(song: Song, root_download_path: str):
     """Download a song from YouTube video and generate file with metadata."""
 
-    title = song.title.replace('/', u"\u2215")
-    album = song.album.title.replace('/', u"\u2215")
-    artist = song.artist.replace('/', u"\u2215")
     video_id = song.video_id
 
     songs_dir = os.path.join(root_download_path, 'songs')
-    album_dir = os.path.join(root_download_path, 'caches', album)
+    album_dir = os.path.join(root_download_path, 'caches', escape(song.album.title))
     # Generate directories
     for path in [songs_dir, album_dir]:
         if not (os.path.exists(path) and os.path.isdir(path)):
             os.makedirs(path, exist_ok=True)
 
-    song_name = f"{title} - {album} - {artist}"
+    song_name = f"{song.title} - {song.album.title} - {song.artist}"
     artwork_url = song.album.artwork_url
     if artwork_url is None:
         artwork_url = ''
     artwork_hash = hashlib.md5(artwork_url.encode()).hexdigest()
-    song_filename = f"{song_name} [{artwork_hash}] [{video_id}].m4a"
+    song_filename = f"{escape(song_name)} [{artwork_hash}] [{video_id}].m4a"
     song_file_path = os.path.join(songs_dir, song_filename)
 
     # Skip download if the song is already present
@@ -149,7 +161,7 @@ def download(song: Song, root_download_path: str):
         return
 
     # Escape glob characters
-    escaped_song_name = song_name.replace('[', '[[]').replace('*', '[*]').replace('?', '[?]')
+    escaped_song_name = song_name.replace('[', '[[]')
     # Find all previously generated songs from a different video or with a different artwork
     for file in glob(f"{escaped_song_name} [[]*] [[]*].m4a"):
         # Delete previous version of the song, keep only current one
@@ -157,7 +169,7 @@ def download(song: Song, root_download_path: str):
 
     downloaded_file_path = song_file(song, album_dir)
     if downloaded_file_path:
-        print(f"[=] Song already downloaded: '{title}' -> '{downloaded_file_path}'")
+        print(f"[=] Song already downloaded: '{song.title}' -> '{downloaded_file_path}'")
     else:
         print(f"[+] Downloading '{song_name}'")
         download_song_from_video_id(video_id, album_dir)
