@@ -162,7 +162,7 @@ def download(song: Song, root_download_path: str):
         return
 
     # Escape glob characters
-    escaped_song_name = song_name.replace('[', '[[]')
+    escaped_song_name = escape(song_name).replace('[', '[[]')
     # Find all previously generated songs from a different video or with a different artwork
     for file in glob(f"{escaped_song_name} [[]*] [[]*].m4a"):
         # Delete previous version of the song, keep only current one
