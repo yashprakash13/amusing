@@ -121,7 +121,8 @@ def song_file(song: Song, album_dir: str) -> str:
     return ""
 
 
-# Escape file system special characters with unicode variants
+# Escape reserved system special characters with unicode variants
+# Based on Windows (more restrictive) reserved characters: https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#naming-conventions
 def escape(name: str) -> str:
     return (
         name.replace('<', '＜')
