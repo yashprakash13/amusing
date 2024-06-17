@@ -24,6 +24,7 @@ class Album(Base):
     tracks: Mapped[int] = mapped_column(nullable=True)
     artist: Mapped[str] = mapped_column(nullable=True)
     release_date: Mapped[str] = mapped_column(nullable=True)
+    artwork_url: Mapped[str] = mapped_column(nullable=True)
     songs: Mapped[List["Song"]] = relationship(back_populates="album")
 
     def __repr__(self) -> str:
@@ -50,9 +51,9 @@ class Song(Base):
     artist: Mapped[str] = mapped_column(nullable=False)
     composer: Mapped[str] = mapped_column(nullable=True)
     genre: Mapped[str] = mapped_column(nullable=True)
+    disc: Mapped[int] = mapped_column(nullable=True)
     track: Mapped[int] = mapped_column(nullable=True)
     video_id: Mapped[str] = mapped_column(nullable=False)
-    artwork_url: Mapped[str] = mapped_column(nullable=True)
     album_id: Mapped[int] = mapped_column(ForeignKey("albums.id"), nullable=False)
     album: Mapped["Album"] = relationship(back_populates="songs")
 

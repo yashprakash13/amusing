@@ -1,8 +1,10 @@
 import pandas as pd
 from sqlalchemy.orm import Session
+from unidecode import unidecode
 
 from amusing.db.models import Album, Song
 from amusing.core.search import search
+from amusing.core.parse_xml import sort_library
 
 def get_video_id(song: Song) -> str:
     """Return YouTube video ID of a song, searching it on YouTube Music if necessary."""
@@ -21,9 +23,10 @@ def process_album(group: pd.DataFrame, album: Album, session: Session) -> pd.Dat
         artist = row['Artist']
         album_title = album.title
         genre = row['Genre']
-        track = row['Track Number']
+        disc = int(row['Disc Number'])
+        track = int(row['Track Number'])
         composer = row['Composer']
-        # This could be initially empty
+        # Could be initially empty
         video_id = row['Video ID']
         artwork_url = row['Artwork URL']
 
@@ -34,22 +37,21 @@ def process_album(group: pd.DataFrame, album: Album, session: Session) -> pd.Dat
         )
 
         if song:
-            updated = True
-            if video_id != '' and (video_id != song.video_id):
+            updated = False
+            if video_id and (video_id != song.video_id):
                 # Update song video_id with new one from CSV
                 song.video_id = video_id
                 print(f"[+] updated video_id: [{video_id}] -> '{song_title} - {album_title} - {artist}'")
                 updated = True
             elif not video_id:
                 # Update CSV with id stored in DB
-                video_id = song.video_id
-                group.loc[index, 'Video ID'] = video_id
-            if artwork_url and (artwork_url != song.artwork_url):
-                song.artwork_url = artwork_url
+                group.loc[index, 'Video ID'] = song.video_id
+            db_artwork = song.album.artwork_url
+            if artwork_url and (artwork_url != db_artwork):
+                song.album.artwork_url = artwork_url
                 updated = True
-            elif not artwork_url:
-                artwork_url = song.artwork_url
-                group.loc[index, 'Artwork URL'] = artwork_url
+            elif not artwork_url and db_artwork:
+                group.loc[index, 'Artwork URL'] = db_artwork
             if updated:
                 session.commit()
 
@@ -61,6 +63,7 @@ def process_album(group: pd.DataFrame, album: Album, session: Session) -> pd.Dat
             artist=artist,
             album=album,
             genre=genre,
+            disc=disc,
             track=track,
             composer=composer,
             video_id=video_id,
@@ -94,11 +97,17 @@ def process_csv(filename: str, session: Session):
             .first()
         )
         if not album:
-            row = group.iloc[0]
             album = Album(title=album_title)
-            album.tracks = row['Track Count']
+
+            # Get album info from its first available song
+            row = group.iloc[0]
+            album.tracks = int(row['Track Count'])
             album.artist = row['Album Artist']
             album.release_date = row['Release Date']
+
+            artwork_url = row['Artwork URL']
+            if artwork_url:
+                album.artwork_url = artwork_url
 
             session.add(album)
             session.commit()
@@ -108,6 +117,9 @@ def process_csv(filename: str, session: Session):
         # Update original DataFrame too
         for index, row in group.iterrows():
             df.at[index, 'Video ID'] = row['Video ID']
+            df.at[index, 'Artwork URL'] = row['Artwork URL']
+
+    df = sort_library(df)
 
     # Finally, export the updated CSV, with video ids
     df.to_csv(filename, index=False)
