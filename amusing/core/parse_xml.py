@@ -81,6 +81,10 @@ def parse_library_xml(root_download_path: str, lib_path: str):
             return df
 
         df_apple_music = df_creation(apple_music, list(apple_music_cols))
+        if not 'Sort Album Artist' in df_apple_music:
+            df_apple_music.insert(0, 'Sort Album Artist', '')
+        if not 'Sort Composer' in df_apple_music:
+            df_apple_music.insert(0, 'Sort Composer', '')
 
         # Fill empty boolean fields
         df_apple_music = df_apple_music.fillna({
