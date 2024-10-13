@@ -81,6 +81,10 @@ def parse_library_xml(root_download_path: str, lib_path: str):
             return df
 
         df_apple_music = df_creation(apple_music, list(apple_music_cols))
+        if not 'Sort Album Artist' in df_apple_music:
+            df_apple_music.insert(0, 'Sort Album Artist', '')
+        if not 'Sort Composer' in df_apple_music:
+            df_apple_music.insert(0, 'Sort Composer', '')
 
         # Fill empty boolean fields
         df_apple_music = df_apple_music.fillna({
@@ -111,7 +115,32 @@ def parse_library_xml(root_download_path: str, lib_path: str):
 
         print("Dataframe created of length: ", len(df_apple_music))
 
-        df_apple_music = sort_library(df_apple_music)
+        # Sort and keep only relevant fields
+        df_apple_music = sort_library(df_apple_music[[
+            'Title',
+            'Album',
+            'Album Artist',
+            'Video ID',
+            'Artwork URL',
+            'Artist',
+            'Composer',
+            'Genre',
+            'Release Date',
+            'Year',
+            'Explicit',
+            'Disc Count',
+            'Disc Number',
+            'Track Count',
+            'Track Number',
+            'Favorited',
+            'Loved',
+            'Playlist Only',
+            'Sort Name',
+            'Sort Album',
+            'Sort Album Artist',
+            'Sort Artist',
+            'Sort Composer'
+        ]])
         df_apple_music.to_csv(
             os.path.join(root_download_path, "Library.csv"), index=False
         )

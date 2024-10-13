@@ -119,7 +119,32 @@ def process_csv(filename: str, session: Session):
             df.at[index, 'Video ID'] = row['Video ID']
             df.at[index, 'Artwork URL'] = row['Artwork URL']
 
-    df = sort_library(df)
+    # Sort and keep only relevant fields
+    df = sort_library(df[[
+        'Title',
+        'Album',
+        'Album Artist',
+        'Video ID',
+        'Artwork URL',
+        'Artist',
+        'Composer',
+        'Genre',
+        'Release Date',
+        'Year',
+        'Explicit',
+        'Disc Count',
+        'Disc Number',
+        'Track Count',
+        'Track Number',
+        'Favorited',
+        'Loved',
+        'Playlist Only',
+        'Sort Name',
+        'Sort Album',
+        'Sort Album Artist',
+        'Sort Artist',
+        'Sort Composer'
+    ]])
 
     # Finally, export the updated CSV, with video ids
     df.to_csv(filename, index=False)
