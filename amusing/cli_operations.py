@@ -10,7 +10,7 @@ from amusing.core.parse_csv import process_csv
 from amusing.core.parse_xml import parse_library_xml
 from amusing.db.engine import get_new_db_session
 from amusing.db.models import Album, Organizer, Song
-from amusing.utils.funcs import construct_db_path, short_filename
+from amusing.utils.funcs import construct_db_path, short_filename, short_filename_clean
 
 
 def download_song_operation(
@@ -151,8 +151,10 @@ def organize_library_operation(root_download_path: str, destination_path: str) -
             songs_dir, song_name, artwork_hash, song.video_id
         )
         song_file_path = os.path.join(songs_dir, song_filename)
-        clean_song_filename = re.sub(r"\[.*?\]", "", song_filename).strip()
-        song_file_path_organizer = os.path.join(destination_path, clean_song_filename)
+        clean_song_filename = short_filename_clean(song.title)
+        destination_dir = os.path.join(destination_path, song.artist, song.album.title)
+        os.makedirs(destination_dir, exist_ok=True)
+        song_file_path_organizer = os.path.join(destination_dir, clean_song_filename)
         try:
             if organizer is None:
                 print(f"Processing new song: {song.id} {song.title}")
