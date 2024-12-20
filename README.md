@@ -222,17 +222,3 @@ Here are some great tools you can use to find album artworks:
 
 Copy the image link into your CSV file and Amusing will download it and embed it into your song the next time you run `amusing download '/path/to/Library.csv'`!
 
-
-## 📝 TODO
-
-1. Provide an option to choose which searched result is downloaded.
-2. Provide a command to show all songs in an album
-3. Provide a command to download a song from youtube link
-4. Better metadata availability (Musicbrainz, Discog etc)
-5. Coverarts (Musicbrainz, somewhere else?)
-6. Lyrics!
-7. Export playlists from Apple Music
-8. Look at which music player to integrate with, make changes to architecture of the library accordingly. The Music player needs to have:
-   - Aesthetic UI, intuitive UX similar to Apple Music or Spotify
-   - Play count, gapless playback, fade-in-out playback
-   - Docker compose support
