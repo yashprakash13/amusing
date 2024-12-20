@@ -6,9 +6,10 @@ from rich.console import Console
 from rich.table import Table
 
 from amusing.cli_operations import (
-    download_song_operation,
-    parse_library_operation,
     download_library_operation,
+    download_song_operation,
+    organize_library_operation,
+    parse_library_operation,
     show_similar_albums_in_db_operation,
     show_similar_songs_for_artist_in_db_operation,
     show_similar_songs_in_db_operation,
@@ -56,20 +57,24 @@ def download_song(
 def parse_library(
     library_path: Annotated[
         str,
-        typer.Argument(help="The path to the 'Library.xml' or 'Library.csv' exported from Apple Music."),
+        typer.Argument(
+            help="The path to the 'Library.xml' or 'Library.csv' exported from Apple Music."
+        ),
     ]
 ):
     """Parse the entire Apple Music library and make/update the DB as needed."""
-    output = parse_library_operation(APP_CONFIG['root_download_path'], library_path)
+    output = parse_library_operation(APP_CONFIG["root_download_path"], library_path)
     if output:
         print(output)
 
 
-@app.command('download')
+@app.command("download")
 def download_library(
     library_path: Annotated[
         str,
-        typer.Argument(help="The path to the 'Library.xml' or 'Library.csv' exported from Apple Music."),
+        typer.Argument(
+            help="The path to the 'Library.xml' or 'Library.csv' exported from Apple Music."
+        ),
     ] = ""
 ):
     """Download the entire DB library.
@@ -77,9 +82,29 @@ def download_library(
     If passed, parse the library and update the DB before download.
     """
     if library_path:
-        parse_library_operation(APP_CONFIG['root_download_path'], library_path)
+        parse_library_operation(APP_CONFIG["root_download_path"], library_path)
 
-    output = download_library_operation(APP_CONFIG['root_download_path'])
+    output = download_library_operation(APP_CONFIG["root_download_path"])
+    if output:
+        print(output)
+
+
+@app.command("organize")
+def organize_library(
+    destination_path: Annotated[
+        str,
+        typer.Argument(
+            help="The full destination directory path for organized music, can be the path which an application like Plex is expecting."
+        ),
+    ]
+):
+    """To organize the music library for an applcation like Plex or Jellyfin.
+    Organizes the music at the supplied destination in the form: ArtistName/AlbumName/Track.
+    """
+
+    output = organize_library_operation(
+        APP_CONFIG["root_download_path"], destination_path
+    )
     if output:
         print(output)
 
