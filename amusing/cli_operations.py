@@ -153,25 +153,30 @@ def organize_library_operation(root_download_path: str, destination_path: str) -
         song_file_path = os.path.join(songs_dir, song_filename)
         clean_song_filename = re.sub(r"\[.*?\]", "", song_filename).strip()
         song_file_path_organizer = os.path.join(destination_path, clean_song_filename)
-        if organizer is None:
-            print(f"Processing new song: {song.id} {song.title}")
-            copyfile(song_file_path, song_file_path_organizer)
-            organizer = Organizer(song_id=song.id, org_video_id=song.video_id)
-            session.add(organizer)
-            session.commit()
-            print(f"Processed: {song_file_path}")
-        else:
-            if organizer.org_video_id != song.video_id:
-                # if video ID is not the same, it means that the videoID in the library has changed so
-                # the organized library needs updating.
-                if os.path.exists(song_file_path_organizer):
-                    os.remove(song_file_path_organizer)
-                else:
-                    print(f"File not found for deletion: {song_file_path_organizer}")
+        try:
+            if organizer is None:
+                print(f"Processing new song: {song.id} {song.title}")
                 copyfile(song_file_path, song_file_path_organizer)
-                organizer.org_video_id = song.video_id
+                organizer = Organizer(song_id=song.id, org_video_id=song.video_id)
+                session.add(organizer)
                 session.commit()
                 print(f"Processed: {song_file_path}")
+            else:
+                if organizer.org_video_id != song.video_id:
+                    # if video ID is not the same, it means that the videoID in the library has changed so
+                    # the organized library needs updating.
+                    if os.path.exists(song_file_path_organizer):
+                        os.remove(song_file_path_organizer)
+                    else:
+                        print(
+                            f"File not found for deletion: {song_file_path_organizer}"
+                        )
+                    copyfile(song_file_path, song_file_path_organizer)
+                    organizer.org_video_id = song.video_id
+                    session.commit()
+                    print(f"Processed: {song_file_path}")
+        except:
+            continue
 
     return ""
 
