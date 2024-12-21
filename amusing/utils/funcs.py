@@ -31,6 +31,7 @@ def escape(name: str) -> str:
 
 # Shorten longer names to avoid huge file names (FFmpeg does not like them)
 def short_filename(directory: str, name: str, artwork_hash: str, video_id: str) -> str:
+    """Return song filename after making sure it's of good length for the library."""
     # Maximum file name lenght supported by FFmpeg
     MAX_LENGHT = 256
     # Lenght of mandatory suffix: ' [artwork_hash] [video_id].m4a'
@@ -43,3 +44,13 @@ def short_filename(directory: str, name: str, artwork_hash: str, video_id: str) 
         name = name[0:MAX_NAME_LENGHT] + "…"
 
     return f"{name} [{artwork_hash}] [{video_id}].m4a"
+
+
+def short_filename_clean(name: str) -> str:
+    """Return song filename after making sure it's of good length and cleaning for organization."""
+    MAX_LENGTH = 256
+    name = escape(name)
+    if len(name) > MAX_LENGTH:
+        name = name[0 : MAX_LENGTH - 10] + "…"
+
+    return f"{name}.m4a"
