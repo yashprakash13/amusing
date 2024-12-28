@@ -1,6 +1,6 @@
 from typing import List
 
-from sqlalchemy import ForeignKey, Text, create_engine
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
