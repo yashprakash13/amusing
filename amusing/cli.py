@@ -1,5 +1,5 @@
 from importlib import metadata
-from typing import Annotated
+from typing import Annotated, Optional
 
 import typer
 from rich.console import Console
@@ -36,19 +36,33 @@ def callback(
     """My app description"""
 
 
+@app.command("album")
+def download_album(
+    title: str = typer.Option(..., help="Title of the album"),
+    artist: Optional[str] = typer.Option(None, help="Artist of the album (optional)"),
+    force: Annotated[
+        bool, typer.Option(help="Overwrite the album if present.")
+    ] = False,
+):
+    """Search and download the album and add it and all of its songs to the db.
+    Creates a new album if not already present.
+    """
+    print(f"Given: Abum {title} by {artist} and force is {force}")
+    # search_album_metadata(title, artist)
+
+
 @app.command("song")
 def download_song(
-    name: Annotated[str, typer.Argument(help="Name of the song.")],
-    artist: Annotated[str, typer.Argument(help="Aritst of the song.")],
-    album: Annotated[str, typer.Argument(help="Album the song belongs to.")],
+    title: str = typer.Option(..., help="Title of the song"),
+    artist: Optional[str] = typer.Option(None, help="Artist of the song (optional)"),
+    album: Optional[str] = typer.Option(None, help="Album of the song (optional)"),
     force: Annotated[bool, typer.Option(help="Overwrite the song if present.")] = False,
 ):
     """Search and download the song and add it to the db.
     Creates a new album if not already present.
     """
-    print(f"Given: {name} from {album} by {artist} and force is {force}")
     output = download_song_operation(
-        album, name, artist, APP_CONFIG["root_download_path"], False
+        title, APP_CONFIG["root_download_path"], artist, album, force
     )
     print(output)
 

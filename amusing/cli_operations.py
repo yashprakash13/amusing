@@ -3,21 +3,29 @@ import os
 import re
 from shutil import copyfile
 
-import amusing.core.save_to_db
-import amusing.core.search
+import typer
+
 from amusing.core.download import download
+from amusing.core.metadata import search_songs_metadata
 from amusing.core.parse_csv import process_csv
 from amusing.core.parse_xml import parse_library_xml
+from amusing.core.save_to_db import check_if_song_in_db, create_new_album_if_not_present
+from amusing.core.search import search
 from amusing.db.engine import get_new_db_session
 from amusing.db.models import Album, Organizer, Song
-from amusing.utils.funcs import construct_db_path, short_filename, short_filename_clean
+from amusing.utils.funcs import (
+    construct_db_path,
+    escape,
+    short_filename,
+    short_filename_clean,
+)
 
 
 def download_song_operation(
-    album_name: str,
     song_name: str,
-    artist_name: str,
     root_download_path: str,
+    artist_name: str = None,
+    album_name: str = None,
     overwrite: bool = False,
 ) -> str:
     """Download a particular song and add it to the db.
@@ -30,41 +38,81 @@ def download_song_operation(
     overwrite (bool): whether to overwrite the song if present in db and downloads.
 
     """
-    song = Song(
-        title=song_name,
-        artist=artist_name,
-        album=Album(title=album_name),
-    )
+    song_metadata_dict = search_songs_metadata(song_name, artist_name, album_name)
+    if song_metadata_dict:
+        song = Song(
+            title=song_metadata_dict["title"],
+            artist=song_metadata_dict["artist"],
+            album=Album(title=song_metadata_dict["album"]),
+        )
+        song.composer = song_metadata_dict["composer"]
+        song.disc = song_metadata_dict["disc"]
+        song.track = song_metadata_dict["track"]
+    else:
+        song = Song(
+            title=song_name,
+            artist=artist_name,
+            album=Album(title=album_name),
+        )
     # fetch song from YT Music
     song_fetched = search(song)
     if not song_fetched:
         return "Couldn't find song through YouTube Music Search."
-    album_name = song_fetched.album.title
-    song_name = song_fetched.title
-    artist_name = song_fetched.artist
-
     try:
-        download(song_fetched, root_download_path)
+        download(song_fetched, root_download_path, overwrite)
     except RuntimeError as e:
         print(f"[!] Error: {e}")
-        return "Something went wrong while downloading a song. Please try again."
+        return "Something went wrong while downloading a song."
     except FileNotFoundError as e:
         print(f"[!] Error: {e}")
         return "Is FFmpeg installed? It is required to generate the songs."
 
     # insert into db
     session = get_new_db_session(construct_db_path(root_download_path))
-    if not album_name:
-        album_name = song_name
-    album_in_db, error = create_new_album(album_name, album_dir, session)
-    if error:
-        return "Something went wrong in creating album. Please try again."
-
-    error = create_new_song(
-        song_name, artist_name, song_fetched.video_id, album_in_db, session, overwrite
+    albums = (
+        session.query(Album).filter(Album.title.ilike(f"%{song.album.title}%")).all()
     )
-    if error:
-        return "Something went wrong in creating song. Please try again."
+    if albums:
+        typer.echo(
+            f"\n\n\nSimilar Albums are already present in the db. Do you want to download this song into any of these albums?"
+        )
+        choices = [album.title for album in albums] + ["Make a new album"]
+        typer.echo("Select an album or create a new one:")
+        for idx, choice in enumerate(choices, start=1):
+            typer.echo(f"{idx}. {choice}")
+        # Prompt user for a choice of album
+        selected_choice = typer.prompt("Enter the option of your choice", type=int)
+        if selected_choice == len(albums) + 1:
+            # Create and commit the new album
+            album = Album(title=album_name)
+            session.add(album)
+            session.commit()
+            typer.echo(f"New album '{album_name}' created!")
+        else:
+            # Fetch the selected album from the database
+            album = albums[selected_choice - 1]
+            typer.echo(f"Selected album: {album.title}")
+
+        # check if the song is present in the selected album in db
+        song_present_in_db_query, error = check_if_song_in_db(
+            song.title, song.artist, album, session
+        )
+        if song_present_in_db_query and overwrite:
+            session.delete(song_present_in_db_query)
+        song.album = album
+        song.video_id = song_fetched.video_id
+        session.add(song)
+        session.commit()
+    else:
+        # Need to make a new album and a song in db
+        album = Album(title=album_name)
+        session.add(album)
+        session.commit()
+        typer.echo(f"New album '{album_name}' created!")
+        song.album = album
+        song.video_id = song_fetched.video_id
+        session.add(song)
+        session.commit()
 
     return "Added song!"
 

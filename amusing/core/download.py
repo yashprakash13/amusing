@@ -139,7 +139,7 @@ def song_file(song: Song, album_dir: str) -> str:
     return ""
 
 
-def download(song: Song, root_download_path: str):
+def download(song: Song, root_download_path: str, overwrite: bool = False):
     """Download a song from YouTube video and generate file with metadata."""
 
     video_id = song.video_id
@@ -159,8 +159,8 @@ def download(song: Song, root_download_path: str):
     song_filename = short_filename(songs_dir, song_name, artwork_hash, video_id)
     song_file_path = os.path.join(songs_dir, song_filename)
 
-    # Skip download if the song is already present
-    if os.path.exists(song_file_path):
+    # Skip download if the song is already present and overwrite is False
+    if os.path.exists(song_file_path) and not overwrite:
         return
 
     # Escape glob characters
