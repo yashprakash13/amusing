@@ -9,7 +9,7 @@ def search(song: Song) -> Song:
     ytmusic = YTMusic()
     search_results = ytmusic.search(
         f"{song.title} - {song.artist} - {song.album.title}",
-        limit=1,
+        limit=5,
         ignore_spelling=True,
         filter="songs",
     )
@@ -28,11 +28,11 @@ def search(song: Song) -> Song:
         typer.echo(f"{idx}. {choice}")
     # Prompt user for a choice of YT Music video ID
     selected_choice = typer.prompt("Enter the option of your choice", type=int)
-    if selected_choice == len(choices) + 1:
+    if selected_choice == len(choices):
         song_video_id = typer.prompt("Enter the Youtube Music Video ID: ")
         # enter a video ID manually
-        song_result = ytmusic.get_song(song_video_id)
-    elif 1 <= selected_choice <= len(choices):
+        song_result = ytmusic.get_song(song_video_id)["videoDetails"]
+    elif 1 <= selected_choice < len(choices):
         # select a video ID from the options
         song_result = search_results[selected_choice - 1]
     else:
