@@ -16,7 +16,7 @@ def search(song: Song) -> Song:
 
     if not len(search_results):
         raise RuntimeError(
-            f"song not found on YouTube Music: '{song.title} - {song.album} - {song.artist}'"
+            f"song not found on YouTube Music: {song.title} - {song.album} - {song.artist}"
         )
 
     typer.echo("Youtube Music search results found, choose one:")

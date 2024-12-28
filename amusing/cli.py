@@ -6,6 +6,7 @@ from rich.console import Console
 from rich.table import Table
 
 from amusing.cli_operations import (
+    download_album_operation,
     download_library_operation,
     download_song_operation,
     organize_library_operation,
@@ -47,8 +48,10 @@ def download_album(
     """Search and download the album and add it and all of its songs to the db.
     Creates a new album if not already present.
     """
-    print(f"Given: Abum {title} by {artist} and force is {force}")
-    # search_album_metadata(title, artist)
+    output = download_album_operation(
+        title, APP_CONFIG["root_download_path"], artist, force
+    )
+    print(output)
 
 
 @app.command("song")
