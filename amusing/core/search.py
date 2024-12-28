@@ -21,7 +21,7 @@ def search(song: Song) -> Song:
 
     typer.echo("Youtube Music search results found, choose one:")
     choices = [
-        f"{search_result.get('title', 'Unknown title')}"
+        f"{search_result.get('title', 'Unknown title')} - {search_result.get('videoId')}"
         for search_result in search_results[:5]
     ] + ["Enter a YT Music video ID"]
     for idx, choice in enumerate(choices, start=1):

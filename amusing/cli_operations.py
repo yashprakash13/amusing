@@ -1,6 +1,5 @@
 import hashlib
 import os
-import re
 from shutil import copyfile
 
 import typer
@@ -10,16 +9,11 @@ from amusing.core.download import download
 from amusing.core.metadata import search_album_metadata, search_songs_metadata
 from amusing.core.parse_csv import process_csv
 from amusing.core.parse_xml import parse_library_xml
-from amusing.core.save_to_db import check_if_song_in_db, create_new_album_if_not_present
+from amusing.core.save_to_db import check_if_song_in_db
 from amusing.core.search import search
 from amusing.db.engine import get_new_db_session
 from amusing.db.models import Album, Organizer, Song
-from amusing.utils.funcs import (
-    construct_db_path,
-    escape,
-    short_filename,
-    short_filename_clean,
-)
+from amusing.utils.funcs import construct_db_path, short_filename, short_filename_clean
 
 
 def download_song_operation(
@@ -118,9 +112,10 @@ def download_song_operation(
     return "Added song!"
 
 
-def download_all_songs_for_given_album(
+def _download_all_songs_for_given_album(
     album: Album, album_metadata: dict, root_download_path: str, session: Session
 ):
+    """A companion function to download_album_operation to do exactly as it says on the tin."""
     for song_metadata_dict in album_metadata["track_list"]:
         print("---")
         choice = typer.prompt(
@@ -166,7 +161,6 @@ def download_album_operation(
     album_name: str,
     root_download_path: str,
     artist_name: str = None,
-    overwrite: bool = False,
 ):
     """Download a particular album and all of its songs and add it to the db.
 
@@ -174,7 +168,6 @@ def download_album_operation(
     album_name (str): name of the album
     artist_name (str): name of the artist
     root_download_path (str): the path to download songs and put db into.
-    overwrite (bool): whether to overwrite the song if present in db and downloads.
     """
     album_metadata = search_album_metadata(album_name, artist_name)
 
@@ -230,9 +223,9 @@ def download_album_operation(
         )
         session.add(album)
         session.commit()
-        typer.echo(f"New album '{album_name}' created!")
+        typer.echo(f"New album '{album.title}' created!")
 
-    return download_all_songs_for_given_album(
+    return _download_all_songs_for_given_album(
         album, album_metadata, root_download_path, session
     )
 

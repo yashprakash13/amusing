@@ -256,49 +256,51 @@ def search_album_metadata(album: str, artist: Optional[str] = None):
     results = response.json().get("releases", [])
     if not results:
         typer.secho("No results found!", fg=typer.colors.YELLOW)
-        return
-
-    for idx, release in enumerate(results):
-        typer.echo(
-            f"[{idx + 1}] {release.get('title')} - {release.get('date', 'Unknown Date')} - {release.get('country', 'Unknown Country')}"
-        )
-
-    choice = typer.prompt("Select an album by number", type=int)
-    if 1 <= choice <= len(results):
-        album_metadata = results[choice - 1]
-        album_id = album_metadata.get("id")
-        album_metadata = fetch_metadata_by_id(
-            "release", album_id, include_params="artist-credits+media+recordings"
-        )
-        artwork_url = get_album_artwork(album_id)
-        album_to_return = album_metadata_from_mb_json(album_metadata)
-        album_to_return["artwork_url"] = artwork_url
-
-        typer.echo("\nMetadata for the selected album:")
-        typer.echo(f"Title: {album_to_return['title']}")
-        typer.echo(f"Number of Tracks: {album_to_return['num_tracks']}")
-        typer.echo(f"Artist: {album_to_return['artist']}")
-        typer.echo(f"Release Date: {album_to_return['release_date']}")
-        typer.echo(f"Artwork URL: {album_to_return['artwork_url']}")
-
-        typer.echo("\nFetching tracklist...")
-        if "media" in album_metadata:
-            typer.echo("\nTracklist and metadata:")
-            track_list = []
-            for medium in album_metadata["media"]:
-                for track in medium.get("tracks", []):
-                    track_metadata = fetch_metadata_by_id(
-                        "recording",
-                        track.get("recording", {}).get("id", ""),
-                        include_params="artist-credits+releases+media",
-                    )
-                    # typer.echo(track_metadata["title"], "-", track_metadata["id"])
-                    track_list.append(song_metadata_from_mb_json(track_metadata))
-            album_to_return["track_list"] = track_list
-        return album_to_return
+        album_id = typer.prompt("Enter the MusicBrainz release ID or q to exit: ")
+        if album_id == "q":
+            sys.exit(1)
     else:
-        typer.secho("Invalid choice!", fg=typer.colors.RED)
-        sys.exit(1)
+        for idx, release in enumerate(results):
+            typer.echo(
+                f"[{idx + 1}] {release.get('title')} - {release.get('date', 'Unknown Date')} - {release.get('country', 'Unknown Country')}"
+            )
+
+        choice = typer.prompt("Select an album by number", type=int)
+        if 1 <= choice <= len(results):
+            album_metadata = results[choice - 1]
+            album_id = album_metadata.get("id")
+        else:
+            typer.secho("Invalid choice!", fg=typer.colors.RED)
+            sys.exit(1)
+    album_metadata = fetch_metadata_by_id(
+        "release", album_id, include_params="artist-credits+media+recordings"
+    )
+    artwork_url = get_album_artwork(album_id)
+    album_to_return = album_metadata_from_mb_json(album_metadata)
+    album_to_return["artwork_url"] = artwork_url
+
+    typer.echo("\nMetadata for the selected album:")
+    typer.echo(f"Title: {album_to_return['title']}")
+    typer.echo(f"Number of Tracks: {album_to_return['num_tracks']}")
+    typer.echo(f"Artist: {album_to_return['artist']}")
+    typer.echo(f"Release Date: {album_to_return['release_date']}")
+    typer.echo(f"Artwork URL: {album_to_return['artwork_url']}")
+
+    typer.echo("\nFetching tracklist...")
+    if "media" in album_metadata:
+        typer.echo("\nTracklist and metadata:")
+        track_list = []
+        for medium in album_metadata["media"]:
+            for track in medium.get("tracks", []):
+                track_metadata = fetch_metadata_by_id(
+                    "recording",
+                    track.get("recording", {}).get("id", ""),
+                    include_params="artist-credits+releases+media",
+                )
+                # typer.echo(track_metadata["title"], "-", track_metadata["id"])
+                track_list.append(song_metadata_from_mb_json(track_metadata))
+        album_to_return["track_list"] = track_list
+    return album_to_return
 
 
 def get_album_artwork(album_id: str) -> str:

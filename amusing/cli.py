@@ -41,16 +41,12 @@ def callback(
 def download_album(
     title: str = typer.Option(..., help="Title of the album"),
     artist: Optional[str] = typer.Option(None, help="Artist of the album (optional)"),
-    force: Annotated[
-        bool, typer.Option(help="Overwrite the album if present.")
-    ] = False,
 ):
-    """Search and download the album and add it and all of its songs to the db.
+    """Search and download the album and add it and any or all of its songs to the db.
     Creates a new album if not already present.
+    This is the preferred way of adding new songs/albums to the music library.
     """
-    output = download_album_operation(
-        title, APP_CONFIG["root_download_path"], artist, force
-    )
+    output = download_album_operation(title, APP_CONFIG["root_download_path"], artist)
     print(output)
 
 
@@ -61,7 +57,7 @@ def download_song(
     album: Optional[str] = typer.Option(None, help="Album of the song (optional)"),
     force: Annotated[bool, typer.Option(help="Overwrite the song if present.")] = False,
 ):
-    """Search and download the song and add it to the db.
+    """Search and download an individual song and add it to the db.
     Creates a new album if not already present.
     """
     output = download_song_operation(

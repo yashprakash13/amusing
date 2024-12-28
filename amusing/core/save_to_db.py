@@ -1,5 +1,3 @@
-import os
-
 from sqlalchemy.orm import Session
 
 from amusing.db.models import Album, Song
