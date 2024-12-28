@@ -137,6 +137,10 @@ def _download_all_songs_for_given_album(
         if not song_fetched:
             return "Couldn't find song through YouTube Music Search."
         try:
+            # this is necessary to keep consistency in between file names in db and downloads
+            song_fetched.title = song_metadata_dict["title"]
+            song_fetched.artist = song_metadata_dict["artist"]
+            song_fetched.album = album
             download(song_fetched, root_download_path, True)
         except RuntimeError as e:
             print(f"[!] Error: {e}")
@@ -338,7 +342,8 @@ def organize_library_operation(root_download_path: str, destination_path: str) -
                     organizer.org_video_id = song.video_id
                     session.commit()
                     print(f"Processed: {song_file_path}")
-        except:
+        except Exception as e:
+            print("Exception: ", e)
             continue
 
     return ""
