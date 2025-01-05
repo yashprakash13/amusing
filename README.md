@@ -59,7 +59,7 @@ There are three things to know before moving on to the next section:
 
 ## 💬 Available commands
 
-There are currently 7 commands available, excluding the `version` and `help` commands.
+There are currently 8 commands available, excluding the `version` and `help` commands.
 
 The first time you run a command (eg. `--help`), an `Amusing` directory will be created in the `~/Downloads` folder.
 For eg., on MacOS, it's in `/Users/Username/Downloads`.
@@ -157,6 +157,8 @@ $ amusing download
 <details>
 <summary><h3>Download a new album</h3></summary>
 
+This is the recommended way to download a new album. You can choose to download a song or skip it with this method, and it either edits if an existing album is found, or adds a new album. 
+
 ```console
 $ amusing album --help
 
@@ -208,8 +210,6 @@ $ amusing song --title "Run" --artist "One Republic" --album "Human"
 
 
 <details>
-
-<details>
 <summary><h3>Organize your music collection for an application like Plex, Navidrome or Jellyfin</h3></summary>
 
 This command helps organize your music library in a new place in the format: Artist/Album/Track 
@@ -240,6 +240,8 @@ $ amusing organize ~/Plex/Media/Music/
 
 </details>
 
+
+<details>
 
 <summary><h3>Search for a similar song, album or artist in your DB/downloads</h3></summary>
 

@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "amusing-app"
-version = "0.4.1"
-description = "CLI to download music independently and from your exported Apple Music library."
+version = "0.4.2"
+description = "CLI app to download music independently and from your exported Apple Music library."
 authors = ["Yash Prakash <yashprakash13@gmail.com>"]
 readme = "README.md"
 packages = [{include = "amusing"}]
