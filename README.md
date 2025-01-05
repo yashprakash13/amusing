@@ -1,12 +1,30 @@
 # 🎧 Amusing 🎸
 
-A CLI to download music independently and from your exported Apple Music library.
+A CLI application to download music independently and from your exported Apple Music library.
 
 ## Why should you use **Amusing**?
 
 - To download your entire Apple Music Library and store it locally in one go
-- To search and download individual songs from YouTube
+- To search and download individual albums and songs from YouTube
 - To keep track of your ever growing music collection
+- To organize and stream your music library through a self-hosted app like Plex, Navidrome or Jellyfin
+
+### Features:
+
+- Takes an exported Library.xml from your Apple Music and converts and exports it as a dataframe into Library.csv (`parse` command)
+- Uses YouTube Music to download songs from the Library.csv (`download` command)
+- The above two steps can be done automatically by a single `download` command
+- The metadata for songs and albums are stored in a dedicated sqlite db, see `amusing/models.py` for the complete list of metadata 
+- Can be used to download individual albums and songs outside of your Apple Music library (`album` and `song` commands). All metadata is extracted from MusicBrainz.
+- Once downloaded, organize your library into a format that is expected by a typical music streaming application like Plex, Navidrome or Jellyfin: Artist/Album/Track (the `organize` command)
+
+### Why not use a library like beets instead?
+
+I found the `beets` library too hard to use so I built this. 
+
+I know that beets is much more expansive than Amusing, but if you have or want a simple workflow that allows you to download albums and songs, extract metadata from a reliable source, and organize your music into a reliable format for use by a music streaming application, you'll find no simpler solution than Amusing. 
+
+
 
 ## 📦 Install it!
 
@@ -41,7 +59,7 @@ There are three things to know before moving on to the next section:
 
 ## 💬 Available commands
 
-There are currently 7 commands available, excluding the `amusing --version`.
+There are currently 7 commands available, excluding the `version` and `help` commands.
 
 The first time you run a command (eg. `--help`), an `Amusing` directory will be created in the `~/Downloads` folder.
 For eg., on MacOS, it's in `/Users/Username/Downloads`.
@@ -49,27 +67,28 @@ For eg., on MacOS, it's in `/Users/Username/Downloads`.
 ```console
 $ amusing --help
 
- Usage: amusing [OPTIONS] COMMAND [ARGS]...
+                                                                                                                                                                                                          
+ Usage: amusing [OPTIONS] COMMAND [ARGS]...                                                                                                                                                               
+                                                                                                                                                                                                          
+ CLI to download music independently and from your exported Apple Music library.                                                                                                                          
+                                                                                                                                                                                                          
+╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --version  -v                                                                                                                                                                                          │
+│ --help               Show this message and exit.                                                                                                                                                       │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ album              Search and download the album and add it and any or all of its songs to the db. Creates a new album if not already present. This is the preferred way of adding new songs/albums to │
+│                    the music library.                                                                                                                                                                  │
+│ download           Download the entire DB library.                                                                                                                                                     │
+│ organize           To organize the music library for an applcation like Plex or Jellyfin. Organizes the music at the supplied destination in the form: ArtistName/AlbumName/Track.                     │
+│ parse              Parse the entire Apple Music library and make/update the DB as needed.                                                                                                              │
+│ showsimilar        Look up the db and show if similar/exact song(s) are found.                                                                                                                         │
+│ showsimilaralbum   Look up the db and show albums similar to the album searched.                                                                                                                       │
+│ showsimilarartist  Look up the db and show songs for similar/exact artist searched.                                                                                                                    │
+│ song               Search and download an individual song and add it to the db. Creates a new album if not already present.                                                                            │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
- CLI to download music independently and from your exported Apple Music library.
 
-╭─ Options ─────────────────────────────────────────────────────────────────────╮
-│ --version  -v                                                                 │
-│ --help               Show this message and exit.                              │
-╰───────────────────────────────────────────────────────────────────────────────╯
-╭─ Commands ────────────────────────────────────────────────────────────────────╮
-│ download           Download the entire DB library.                            │
-│ parse              Parse the entire Apple Music library and make/update the   │
-│                    DB as needed.                                              │
-│ showsimilar        Look up the db and show if similar/exact song(s) are       │
-│                    found.                                                     │
-│ showsimilaralbum   Look up the db and show albums similar to the album        │
-│                    searched.                                                  │
-│ showsimilarartist  Look up the db and show songs for similar/exact artist     │
-│                    searched.                                                  │
-│ song               Search and download the song and add it to the db. Creates │
-│                    a new album if not already present.                        │
-╰───────────────────────────────────────────────────────────────────────────────╯
 ```
 
 <details>
@@ -106,7 +125,7 @@ $ amusing parse 'your/path/to/Library.xml'
 
 <summary><h3>Download the entire exported Apple Music library</h3></summary>
 
-You can also pass a `Library.xml` or `Library.csv` file to parse before downloading the songs.
+You can also pass a `Library.xml` or a `Library.csv` file to parse before downloading the songs.
 
 ```console
 $ amusing download --help
@@ -127,9 +146,34 @@ $ amusing download --help
 # Example
 $ amusing download 'your/path/to/Library.xml'
 
-# Is equivalent to run
+# is equivalent to running
 $ amusing parse 'your/path/to/Library.xml'
 $ amusing download
+```
+
+</details>
+
+
+<details>
+<summary><h3>Download a new album</h3></summary>
+
+```console
+$ amusing album --help
+
+                                                                                                                                                                                                         
+ Usage: amusing album [OPTIONS]                                                                                                                                                                           
+                                                                                                                                                                                                          
+ Search and download the album and add it and any or all of its songs to the db. Creates a new album if not already present. This is the preferred way of adding new songs/albums to the music library.   
+                                                                                                                                                                                                          
+╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ *  --title         TEXT  Title of the album [default: None] [required]                                                                                                                                 │
+│    --artist        TEXT  Artist of the album (optional) [default: None]                                                                                                                                │
+│    --help                Show this message and exit.                                                                                                                                                   │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+# use it like so:
+$ amusing album --title "808s & Heartbreak" --artist "Kanye West"
+
 ```
 
 </details>
@@ -142,29 +186,60 @@ $ amusing download
 ```console
 $ amusing song --help
 
- Usage: amusing song [OPTIONS] NAME ARTIST ALBUM
+Usage: amusing song [OPTIONS]                                                                                                                                                                            
+                                                                                                                                                                                                          
+ Search and download an individual song and add it to the db. Creates a new album if not already present.                                                                                                 
+                                                                                                                                                                                                          
+╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ *  --title                   TEXT  Title of the song [default: None] [required]                                                                                                                        │
+│    --artist                  TEXT  Artist of the song (optional) [default: None]                                                                                                                       │
+│    --album                   TEXT  Album of the song (optional) [default: None]                                                                                                                        │
+│    --force     --no-force          Overwrite the song if present. [default: no-force]                                                                                                                  │
+│    --help                          Show this message and exit.                                                                                                                                         │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
- Search and download the song and add it to the db. Creates a new album if not
- already present.
 
-╭─ Arguments ───────────────────────────────────────────────────────────────────╮
-│ *    name        TEXT  Name of the song. [default: None] [required]           │
-│ *    artist      TEXT  Aritst of the song. [default: None] [required]         │
-│ *    album       TEXT  Album the song belongs to. [default: None] [required]  │
-╰───────────────────────────────────────────────────────────────────────────────╯
-╭─ Options ─────────────────────────────────────────────────────────────────────╮
-│ --force    --no-force      Overwrite the song if present. [default: no-force] │
-│ --help                     Show this message and exit.                        │
-╰───────────────────────────────────────────────────────────────────────────────╯
+ 
+$ amusing song --title "Run" --artist "One Republic" --album "Human"
 
-# Example, the search keywords need not be exact of course:
-$ amusing song "Run" "One Republic" "Human"
 ```
 
 </details>
 
 
 <details>
+
+<details>
+<summary><h3>Organize your music collection for an application like Plex, Navidrome or Jellyfin</h3></summary>
+
+This command helps organize your music library in a new place in the format: Artist/Album/Track 
+
+```console
+
+$ amusing organize --help
+
+Usage: amusing organize [OPTIONS] DESTINATION_PATH                                                                                                                                                       
+                                                                                                                                                                                                          
+ To organize the music library for an applcation like Plex or Jellyfin. Organizes the music at the supplied destination in the form: ArtistName/AlbumName/Track.                                          
+                                                                                                                                                                                                          
+╭─ Arguments ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ *    destination_path      TEXT  The full destination directory path for organized music, can be the path which an application like Plex is expecting. [default: None] [required]                      │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help          Show this message and exit.                                                                                                                                                            │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+# use it like so:
+$ amusing organize ~/Plex/Media/Music/
+
+
+```
+
+
+
+</details>
+
 
 <summary><h3>Search for a similar song, album or artist in your DB/downloads</h3></summary>
 
@@ -214,11 +289,18 @@ Album to look up:  Human
 The resulting `Library.csv` file will be automatically updated by Amusing at every DB change.
 
 You can manually modify it to change which YouTube video to download for a specific song.
-You can also add a custom URL to download a specific album artwork.
+You can also add a new URL to download a specific album artwork or a specific YouTube video.
 
 Here are some great tools you can use to find album artworks:
 - [Ben Dodson's iTunes Artwork Finder](https://bendodson.com/projects/itunes-artwork-finder/)
 - [Ben Dodson's Apple Music Artwork Finder](https://bendodson.com/projects/apple-music-artwork-finder)
 
-Copy the image link into your CSV file and Amusing will download it and embed it into your song the next time you run `amusing download '/path/to/Library.csv'`!
+You just need to run `amusing download '/path/to/Library.csv'` and you'll get the updated song/album metadata in your db and the new downloaded song in your collection. 
 
+You can then use the `organize` command again to sort it out for your Plex application. Running the commnand will make sure to get the updated album(s)/song(s) into your organized music library. 
+
+## 🪲 Bugs
+
+Please open a new Issue to make a bug or an enhancement request known to me. 
+
+Also, submit a PR with improvements or new features at your will. :)
